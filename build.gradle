@@ -21,55 +21,23 @@ repositories {
 }
 
 dependencies {
-    // ==========================
-    // Spring
-    // ==========================
-    // Spring Data JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    // Spring Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
-
-    // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    // Spring Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // ==========================
-    // Database
-    // ==========================
-    // PostgreSQL Driver
     runtimeOnly 'org.postgresql:postgresql'
 
-    // ==========================
-    // JWT (JSON Web Token)
-    // ==========================
-    // JWT API
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-
-    // JWT 구현체
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-
-    // JWT JSON 직렬화/역직렬화(Jackson)
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // ==========================
-    // Lombok
-    // ==========================
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // ==========================
-    // Test
-    // ==========================
-    // Spring Boot Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-    // Spring Security Test
     testImplementation 'org.springframework.security:spring-security-test'
 
-    // TestContainers
     testImplementation 'org.testcontainers:junit-jupiter:1.20.1'
     testImplementation 'org.testcontainers:testcontainers:1.20.1'
     testImplementation 'org.testcontainers:postgresql:1.20.1'
