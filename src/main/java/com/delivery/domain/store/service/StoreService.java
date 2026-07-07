@@ -27,7 +27,7 @@ public class StoreService {
     @Transactional
     public StoreResponseDto createStore(Long userId, StoreRequestDto request) {
 
-        if (storeRepository.existsByUserIdAndNameAndAddressAndDeletedAtIsNull(userId, request.getName(), request.getAddress())) {
+        if (storeRepository.existsByUserIdAndNameAndRegionIdAndDeletedAtIsNull(userId, request.getName(), request.getRegionId())) {
             throw new RuntimeException("이미 등록된 가게입니다.");
         }
 
@@ -55,8 +55,8 @@ public class StoreService {
 
     // 가게 목록 조회
     @Transactional(readOnly = true)
-    public Page<StoreResponseDto> getStores(UUID categoryId, String name, Pageable pageable) {
-        return storeRepository.findStores(categoryId, name, pageable)
+    public Page<StoreResponseDto> getStores(UUID categoryId, UUID regionId, String name, Pageable pageable) {
+        return storeRepository.findStores(categoryId, regionId, name, pageable)
                 .map(StoreResponseDto::from);
     }
 
