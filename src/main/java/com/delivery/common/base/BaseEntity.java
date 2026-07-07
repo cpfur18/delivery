@@ -1,4 +1,3 @@
 package com.delivery.common.base;
 
-public class BaseEntity {
-}
+public class BaseEntity {}
