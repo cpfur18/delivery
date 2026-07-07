@@ -14,11 +14,10 @@ public enum UserErrorCode implements ErrorCode {
     INVALID_PASSWORD(
             HttpStatus.BAD_REQUEST,
             "비밀번호는 최소 8자 이상, 15자 이하의 알파벳 대소문자(a~z, A~Z), 숫자(0~9), 특수문자이어야 합니다."),
+    INVALID_NICKNAME(
+            HttpStatus.BAD_REQUEST,
+            "닉네임은 최소 2자 이상, 16자 이하의 알파벳 대소문자(a~z, A~Z), 숫자(0~9), 한글이어야 합니다."),
     INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "전화번호는 9~15자리의 숫자와 '-'이어야 합니다."),
-
-    // 403 Forbidden
-    NOT_OWNER(HttpStatus.FORBIDDEN, "사장 권한이 없습니다."),
-    NOT_MASTER(HttpStatus.FORBIDDEN, "마스터 권한이 없습니다."),
 
     // 404 Not Found
     NOT_EXIST_USER(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
