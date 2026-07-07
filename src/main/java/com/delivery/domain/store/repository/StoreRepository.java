@@ -16,11 +16,13 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
 
     @Query("SELECT s FROM Store s WHERE s.deletedAt IS NULL " +
             "AND (:categoryId IS NULL OR s.categoryId = :categoryId) " +
+            "AND (:regionId IS NULL OR s.regionId = :regionId) " +
             "AND (:name IS NULL OR s.name LIKE %:name%)")
     Page<Store> findStores(@Param("categoryId") UUID categoryId,
+                           @Param("regionId") UUID regionId,
                            @Param("name") String name,
                            Pageable pageable);
 
     //가게 중복 등록
-    boolean existsByUserIdAndNameAndAddressAndDeletedAtIsNull(Long userId, String name, String address);
+    boolean existsByUserIdAndNameAndRegionIdAndDeletedAtIsNull(Long userId, String name, UUID regionId);
 }
