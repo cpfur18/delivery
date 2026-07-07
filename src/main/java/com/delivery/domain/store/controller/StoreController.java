@@ -39,9 +39,10 @@ public class StoreController {
     @GetMapping
     public ResponseEntity<?> getStores(
             @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) UUID regionId,
             @RequestParam(required = false) String name,
             Pageable pageable) {
-        Page<StoreResponseDto> response = storeService.getStores(categoryId, name, pageable);
+        Page<StoreResponseDto> response = storeService.getStores(categoryId, regionId, name, pageable);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
