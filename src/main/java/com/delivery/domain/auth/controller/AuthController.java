@@ -8,6 +8,7 @@ import com.delivery.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,14 +21,18 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping
-    public RestApiResponse<AuthResponseDto> signUp(@Valid @RequestBody SignUpRequestDto request) {
+    public ResponseEntity<RestApiResponse<AuthResponseDto>> signUp(
+            @Valid @RequestBody SignUpRequestDto request) {
         AuthResponseDto response = authService.signUp(request);
-        return RestApiResponse.success(HttpStatus.CREATED, "회원가입 성공", response);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(RestApiResponse.success(HttpStatus.CREATED, "회원가입 성공", response));
     }
 
     @PostMapping("/login")
-    public RestApiResponse<AuthResponseDto> login(@RequestBody LoginRequestDto request) {
+    public ResponseEntity<RestApiResponse<AuthResponseDto>> login(
+            @RequestBody LoginRequestDto request) {
         AuthResponseDto response = authService.login(request);
-        return RestApiResponse.success(HttpStatus.OK, "로그인 성공", response);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(RestApiResponse.success(HttpStatus.OK, "로그인 성공", response));
     }
 }
