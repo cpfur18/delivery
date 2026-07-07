@@ -22,4 +22,10 @@ public class Region extends BaseEntity {
 
     @Column(name = "name", nullable = false, length = 100)
     private String name;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 }
