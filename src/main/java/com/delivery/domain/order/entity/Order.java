@@ -1,5 +1,6 @@
 package com.delivery.domain.order.entity;
 
+import com.delivery.common.base.BaseEntity;
 import com.delivery.domain.order.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -23,7 +24,7 @@ import java.util.UUID;
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Order {
+public class Order extends BaseEntity {
 
     @Id
     @Column(name = "id", nullable = false)
@@ -51,36 +52,17 @@ public class Order {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "created_by", nullable = false, length = 100)
-    private String createdBy;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "updated_by", length = 100)
-    private String updatedBy;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-    @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public Order(Long userId, UUID storeId, String deliveryAddress, String createdBy) {
+    public Order(Long userId, UUID storeId, String deliveryAddress) {
         this.id = UUID.randomUUID();
         this.userId = userId;
         this.storeId = storeId;
         this.status = OrderStatus.REQUESTED;
         this.deliveryAddress = deliveryAddress;
         this.totalPrice = 0;
-        this.createdAt = LocalDateTime.now();
-        this.createdBy = createdBy;
     }
 
     public void addOrderItem(OrderItem orderItem) {
@@ -91,8 +73,6 @@ public class Order {
 
     public void changeStatus(OrderStatus status, String updatedBy) {
         this.status = status;
-        this.updatedAt = LocalDateTime.now();
-        this.updatedBy = updatedBy;
 
         if (status == OrderStatus.COMPLETED) {
             this.completedAt = LocalDateTime.now();
@@ -103,8 +83,4 @@ public class Order {
         }
     }
 
-    public void delete(String deletedBy) {
-        this.deletedAt = LocalDateTime.now();
-        this.deletedBy = deletedBy;
-    }
 }
