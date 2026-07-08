@@ -3,11 +3,13 @@ package com.delivery.domain.store.controller;
 import com.delivery.domain.store.dto.StoreRequestDto;
 import com.delivery.domain.store.dto.StoreResponseDto;
 import com.delivery.domain.store.service.StoreService;
+import com.delivery.global.security.config.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,8 +24,10 @@ public class StoreController {
     private final StoreService storeService;
 
     @PostMapping
-    public ResponseEntity<?> createStore(@Valid @RequestBody StoreRequestDto request) {
-        Long userId = 1L;
+    public ResponseEntity<?> createStore(
+            @Valid @RequestBody StoreRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getId();
         StoreResponseDto response = storeService.createStore(userId, request);
 
         Map<String, Object> result = new HashMap<>();
@@ -69,9 +73,11 @@ public class StoreController {
     }
 
     @PutMapping("/{storeId}")
-    public ResponseEntity<?> updateStore(@PathVariable UUID storeId,
-                                         @Valid @RequestBody StoreRequestDto request) {
-        Long userId = 1L;
+    public ResponseEntity<?> updateStore(
+            @PathVariable UUID storeId,
+            @Valid @RequestBody StoreRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getId();
         StoreResponseDto response = storeService.updateStore(storeId, userId, request);
 
         Map<String, Object> result = new HashMap<>();
@@ -85,9 +91,11 @@ public class StoreController {
     }
 
     @PatchMapping("/{storeId}/status")
-    public ResponseEntity<?> updateStoreStatus(@PathVariable UUID storeId,
-                                               @RequestBody Map<String, Boolean> request) {
-        Long userId = 1L;
+    public ResponseEntity<?> updateStoreStatus(
+            @PathVariable UUID storeId,
+            @RequestBody Map<String, Boolean> request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getId();
         StoreResponseDto response = storeService.updateStoreStatus(storeId, userId, request.get("isOpen"));
 
         Map<String, Object> result = new HashMap<>();
@@ -101,8 +109,10 @@ public class StoreController {
     }
 
     @DeleteMapping("/{storeId}")
-    public ResponseEntity<?> deleteStore(@PathVariable UUID storeId) {
-        Long userId = 1L;
+    public ResponseEntity<?> deleteStore(
+            @PathVariable UUID storeId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getId();
         storeService.deleteStore(storeId, userId);
 
         Map<String, Object> result = new HashMap<>();
