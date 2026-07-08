@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.global.config.JpaAuditingConfig;
+import com.delivery.testconfig.AbstractIntegrationTest;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,29 +17,13 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @DataJpaTest
-@Testcontainers
 @Import(JpaAuditingConfig.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class MenuRepositoryIntegrationTest {
+class MenuRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     private static final UUID STORE_ID = UUID.randomUUID();
-
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:17");
-
-    @DynamicPropertySource
-    static void overrideProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGRES::getUsername);
-        registry.add("spring.datasource.password", POSTGRES::getPassword);
-    }
 
     @Autowired private MenuRepository menuRepository;
 
