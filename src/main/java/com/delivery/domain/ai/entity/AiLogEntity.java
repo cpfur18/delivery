@@ -5,6 +5,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
@@ -24,6 +26,7 @@ import lombok.NoArgsConstructor;
 public class AiLogEntity extends BaseCreatedEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "ai_log_id")
     private UUID aiLogId;
 
@@ -40,7 +43,7 @@ public class AiLogEntity extends BaseCreatedEntity {
     @Column(name = "response_text", columnDefinition = "text")
     private String responseText;
 
-    @Column(name = "is_success", nullable = false)
+    @Column(name = "is_success", nullable = false, columnDefinition = "boolean default true")
     private boolean success;
 
     public AiLogEntity(
@@ -49,7 +52,6 @@ public class AiLogEntity extends BaseCreatedEntity {
             String requestText,
             String responseText,
             boolean success) {
-        this.aiLogId = UUID.randomUUID();
         this.requestType = requestType;
         this.referenceId = referenceId;
         this.requestText = requestText;
