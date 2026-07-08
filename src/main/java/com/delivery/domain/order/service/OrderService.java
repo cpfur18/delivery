@@ -4,16 +4,28 @@ import com.delivery.domain.order.dto.request.OrderCreateRequest;
 import com.delivery.domain.order.dto.request.OrderItemCreateRequest;
 import com.delivery.domain.order.dto.response.OrderCreateResponse;
 import com.delivery.domain.order.dto.response.OrderDetailResponse;
+import com.delivery.domain.order.dto.response.OrderListResponse;
 import com.delivery.domain.order.entity.Order;
 import com.delivery.domain.order.entity.OrderItem;
 import com.delivery.domain.order.enums.OrderErrorCode;
+import com.delivery.domain.order.enums.OrderStatus;
 import com.delivery.domain.order.repository.OrderRepository;
 import com.delivery.global.exception.BusinessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
+
+import static com.delivery.domain.order.repository.OrderSpecification.*;
 
 @Service
 @RequiredArgsConstructor
@@ -124,15 +136,99 @@ public class OrderService {
 
     }
 
+    // 고객 본인 주문 내역 조회
+    @Transactional(readOnly = true)
+    public OrderListResponse getMyOrders(
+            Long currentUserId,
+            LocalDate startDate,
+            LocalDate endDate,
+            OrderStatus status,
+            int page,
+            int size,
+            String sort
+    ) {
+        // 날짜 범위 검증
+        // startDate가 endDate보다 늦으면 잘못된 조회 조건으로 판단
+        validateDateRange(startDate, endDate);
+
+        // LocalDate를 LocalDateTime으로 변환
+        // startDate는 해당 날짜의 00:00:00부터 조회
+        LocalDateTime startDateTime = startDate != null
+                ? startDate.atStartOfDay()
+                : null;
+
+        // endDate는 해당 날짜의 마지막 시간까지 조회
+        LocalDateTime endDateTime = endDate != null
+                ? endDate.atTime(LocalTime.MAX)
+                : null;
+
+        // 페이지 크기 보정
+        // 과제 조건에 따라 10, 30, 50만 허용하고 그 외 값은 10으로 고정
+        int normalizedSize = normalizePageSize(size);
+
+        // Pageable 생성
+        // page, size, sort 조건을 Repository에 넘길 수 있는 객체로 변환
+        Pageable pageable = createPageable(page, normalizedSize, sort);
+
+        // 검색 조건 조합
+        // OrderSpecification에 분리해둔 조건들을 조립
+        // null인 조건은 Specification에서 제외됨
+        Specification<Order> spec = Specification
+                .where(userIdEquals(currentUserId))   // 본인 주문만 조회
+                .and(deletedAtIsNull())               // Soft Delete 제외
+                .and(statusEquals(status))            // status가 있을 때만 상태 조건 추가
+                .and(createdAtGoe(startDateTime))     // startDate가 있을 때만 시작일 조건 추가
+                .and(createdAtLoe(endDateTime));      // endDate가 있을 때만 종료일 조건 추가
+
+        // DB 조회
+        // Specification = 검색 조건
+        // Pageable = 페이징 + 정렬 조건
+        Page<Order> orders = orderRepository.findAll(spec, pageable);
+
+        // Page<Order>를 응답 DTO로 변환
+        return OrderListResponse.from(orders);
+    }
+
+    // 날짜 범위 검증 메서드
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new BusinessException(OrderErrorCode.INVALID_ORDER_DATE_RANGE);
+        }
+    }
+
+    // 페이지 크기 보정 메서드
+    private int normalizePageSize(int size) {
+        if (size == 10 || size == 30 || size == 50) {
+            return size;
+        }
+
+        return 10;
+    }
+
+    private Pageable createPageable(int page, int size, String sort) {
+        // 기본 정렬은 생성일 기준 최신순
+        Sort.Direction direction = Sort.Direction.DESC;
+
+        // sort=createdAt,asc인 경우에만 오래된순으로 변경
+        if ("createdAt,asc".equalsIgnoreCase(sort)) {
+            direction = Sort.Direction.ASC;
+        }
+
+        return PageRequest.of(
+                Math.max(page, 0),
+                size,
+                Sort.by(direction, "createdAt")
+        );
+    }
+
+
+
     // Customer 검증 메서드
     private void validateOrderAccessForCustomer(Order order, Long currentUserId) {
         if (!order.getUserId().equals(currentUserId)) {
             throw new BusinessException(OrderErrorCode.FORBIDDEN_ORDER_ACCESS);
         }
     }
-
-
-
 
 
     // 가게 존재 여부 확인하는 메서드

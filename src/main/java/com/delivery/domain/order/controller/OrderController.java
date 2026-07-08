@@ -4,6 +4,7 @@ import com.delivery.common.RestApiResponse;
 import com.delivery.domain.order.dto.request.OrderCreateRequest;
 import com.delivery.domain.order.dto.response.OrderCreateResponse;
 import com.delivery.domain.order.dto.response.OrderDetailResponse;
+import com.delivery.domain.order.dto.response.OrderListResponse;
 import com.delivery.domain.order.enums.OrderStatus;
 import com.delivery.domain.order.service.OrderService;
 import jakarta.validation.Valid;
@@ -64,6 +65,53 @@ public class OrderController {
                 )
         );
 
+    }
+
+    // 고객 본인 주문 내역 조회
+    @GetMapping("/me")
+    // TODO: Spring Security/JWT 연동 후 역할 기반 접근 권한 적용
+    // @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<RestApiResponse<OrderListResponse>> getMyOrders(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate startDate,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endDate,
+
+            @RequestParam(required = false)
+            OrderStatus status,
+
+            @RequestParam(defaultValue = "0")
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            int size,
+
+            @RequestParam(defaultValue = "createdAt,desc")
+            String sort
+    ) {
+        // TODO: Spring Security/JWT 적용 후 인증 객체에서 로그인 사용자 ID 추출
+        Long currentUserId = 1L;
+
+        OrderListResponse response = orderService.getMyOrders(
+                currentUserId,
+                startDate,
+                endDate,
+                status,
+                page,
+                size,
+                sort
+        );
+
+        return ResponseEntity.ok(
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "주문 내역 조회에 성공했습니다.",
+                        response
+                )
+        );
     }
 
 
