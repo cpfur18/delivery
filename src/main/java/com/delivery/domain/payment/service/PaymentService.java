@@ -8,7 +8,7 @@ import com.delivery.domain.payment.repository.PaymentRepository;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.global.exception.BusinessException;
 import com.delivery.global.exception.GlobalErrorCode;
-import com.delivery.global.security.config.CustomUserDetail;
+import com.delivery.global.security.config.CustomUserDetails;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,7 +25,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
 
-    public PaymentResponse getPayment(UUID paymentId, CustomUserDetail userDetail) {
+    public PaymentResponse getPayment(UUID paymentId, CustomUserDetails userDetail) {
         Payment payment = getPaymentOrThrow(paymentId);
 
         if (hasRole(userDetail, Role.CUSTOMER) && !payment.isOwnedBy(userDetail.getId())) {
@@ -36,7 +36,7 @@ public class PaymentService {
     }
 
     public PaymentPageResponse getMyPayments(
-            CustomUserDetail userDetail, int page, int size, PaymentStatus status) {
+            CustomUserDetails userDetail, int page, int size, PaymentStatus status) {
         validatePageRequest(page, size);
 
         Pageable pageable = createPageable(page, size);
@@ -67,7 +67,7 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse cancelPayment(
-            UUID paymentId, String cancelReason, CustomUserDetail userDetail) {
+            UUID paymentId, String cancelReason, CustomUserDetails userDetail) {
         Payment payment = getPaymentOrThrow(paymentId);
 
         if (hasRole(userDetail, Role.CUSTOMER) && !payment.isOwnedBy(userDetail.getId())) {
@@ -98,7 +98,7 @@ public class PaymentService {
         }
     }
 
-    private boolean hasRole(CustomUserDetail userDetail, Role role) {
+    private boolean hasRole(CustomUserDetails userDetail, Role role) {
         return userDetail.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals(role.getAuthority()));
     }

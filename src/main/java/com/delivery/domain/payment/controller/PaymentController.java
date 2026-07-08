@@ -6,7 +6,7 @@ import com.delivery.domain.payment.dto.response.PaymentPageResponse;
 import com.delivery.domain.payment.dto.response.PaymentResponse;
 import com.delivery.domain.payment.entity.PaymentStatus;
 import com.delivery.domain.payment.service.PaymentService;
-import com.delivery.global.security.config.CustomUserDetail;
+import com.delivery.global.security.config.CustomUserDetails;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class PaymentController {
     @GetMapping("/payments/{paymentId}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'OWNER', 'MANAGER', 'MASTER')")
     public ResponseEntity<RestApiResponse<PaymentResponse>> getPayment(
-            @PathVariable UUID paymentId, @AuthenticationPrincipal CustomUserDetail userDetail) {
+            @PathVariable UUID paymentId, @AuthenticationPrincipal CustomUserDetails userDetail) {
         PaymentResponse response = paymentService.getPayment(paymentId, userDetail);
         return ResponseEntity.ok(
                 RestApiResponse.success(HttpStatus.OK, "결제 상세 조회에 성공했습니다.", response));
@@ -41,7 +41,7 @@ public class PaymentController {
     @GetMapping("/payments/me")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<RestApiResponse<PaymentPageResponse>> getMyPayments(
-            @AuthenticationPrincipal CustomUserDetail userDetail,
+            @AuthenticationPrincipal CustomUserDetails userDetail,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) PaymentStatus status) {
@@ -67,7 +67,7 @@ public class PaymentController {
     public ResponseEntity<RestApiResponse<PaymentResponse>> cancelPayment(
             @PathVariable UUID paymentId,
             @Valid @RequestBody PaymentCancelRequest request,
-            @AuthenticationPrincipal CustomUserDetail userDetail) {
+            @AuthenticationPrincipal CustomUserDetails userDetail) {
         PaymentResponse response =
                 paymentService.cancelPayment(paymentId, request.cancelReason(), userDetail);
         return ResponseEntity.ok(
