@@ -4,4 +4,6 @@ import com.delivery.domain.user.entity.Address;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AddressRepository extends JpaRepository<Address, UUID> {}
+public interface AddressRepository extends JpaRepository<Address, UUID> {
+    long countByUserId(Long userId);
+}

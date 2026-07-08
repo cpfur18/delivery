@@ -5,6 +5,8 @@ import com.delivery.domain.user.dto.CreateAddressRequest;
 import com.delivery.domain.user.dto.UpdateAddressRequestDto;
 import com.delivery.domain.user.entity.Address;
 import com.delivery.domain.user.entity.User;
+import com.delivery.domain.user.exception.UserErrorCode;
+import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.mapper.UserDtoMapper;
 import com.delivery.domain.user.repository.AddressRepository;
 import java.util.List;
@@ -21,6 +23,9 @@ public class AddressService {
     private final UserService userService;
 
     public AddressResponseDto createAddress(Long userId, CreateAddressRequest request) {
+        if(addressRepository.countByUserId(userId) == 10) {
+            throw new UserException(UserErrorCode.EXCEED_MAX_ADDRESS);
+        }
         User user = userService.findUser(userId);
 
         Address address =
@@ -33,6 +38,7 @@ public class AddressService {
     }
 
     public List<AddressResponseDto> findAddresses(Long userId) {
+
         throw new UnsupportedOperationException("개발 중");
     }
 
