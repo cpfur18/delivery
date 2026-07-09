@@ -5,9 +5,10 @@ import com.delivery.domain.order.dto.request.OrderItemCreateRequest;
 import com.delivery.domain.order.dto.response.OrderCreateResponse;
 import com.delivery.domain.order.dto.response.OrderDetailResponse;
 import com.delivery.domain.order.dto.response.OrderListResponse;
+import com.delivery.domain.order.dto.response.OrderStatusResponse;
 import com.delivery.domain.order.entity.Order;
 import com.delivery.domain.order.entity.OrderItem;
-import com.delivery.domain.order.enums.OrderErrorCode;
+import com.delivery.domain.order.exception.OrderErrorCode;
 import com.delivery.domain.order.enums.OrderStatus;
 import com.delivery.domain.order.repository.OrderRepository;
 import com.delivery.global.exception.BusinessException;
@@ -285,6 +286,166 @@ public class OrderService {
         // BaseEntity의 delete()를 활용
         // 실제 DELETE가 아니라 deleted_at, deleted_by 값을 채우는 Soft Delete
         order.delete(String.valueOf(currentAdminId));
+    }
+
+
+    // 고객 주문 상태 변경
+    // 주문 취소(고객)
+    @Transactional
+    public OrderStatusResponse cancelOrder(UUID orderId, Long currentUserId) {
+        // 삭제되지 않은 주문 조회
+        Order order = findActiveOrder(orderId);
+
+        // 고객 본인 주문인지 검증
+        // TODO: Security/JWT 연동 후 currentUserId를 인증 객체에서 가져오도록 수정
+        validateOrderAccessForCustomer(order, currentUserId);
+
+        // REQUESTED 상태에서만 취소 가능
+        validateStatusTransition(order, OrderStatus.CUSTOMER_CANCELLED);
+
+        // 주문 생성 후 5분 이내인지 검증
+        validateCancelTime(order);
+
+        // Soft Delete가 아니라 주문 상태를 CUSTOMER_CANCELLED로 변경
+        order.changeStatus(OrderStatus.CUSTOMER_CANCELLED);
+
+        // 변경된 상태 응답
+        return OrderStatusResponse.from(order);
+    }
+
+
+    // 주문 최종 완료(고객)
+    @Transactional
+    public OrderStatusResponse completeOrder(UUID orderId, Long currentUserId) {
+        // 삭제되지 않은 주문 조회
+        Order order = findActiveOrder(orderId);
+
+        // 고객 본인 주문인지 검증
+        // TODO: Security/JWT 연동 후 currentUserId를 인증 객체에서 가져오도록 수정
+        validateOrderAccessForCustomer(order, currentUserId);
+
+        // DELIVERED 상태에서만 COMPLETED로 변경 가능
+        validateStatusTransition(order, OrderStatus.COMPLETED);
+
+        // 주문 상태 변경
+        order.changeStatus(OrderStatus.COMPLETED);
+
+        return OrderStatusResponse.from(order);
+    }
+
+
+    // 가게 상태 변경
+    @Transactional
+    public OrderStatusResponse changeStoreOrderStatus(
+            UUID storeId,
+            UUID orderId,
+            OrderStatus nextStatus,
+            Long currentUserId
+    ) {
+        // 삭제되지 않은 주문 조회
+        Order order = findActiveOrder(orderId);
+
+        // 요청 URL의 storeId와 주문의 storeId가 같은지 검증
+        validateOrderBelongsToStore(order, storeId);
+
+        /*
+         * TODO: Store 도메인 + Security/JWT 연동 후 권한 검증 추가
+         *
+         * OWNER
+         * - 로그인한 사용자가 해당 storeId의 소유자인 경우만 변경 가능
+         *
+         * MANAGER / MASTER
+         * - 정책에 따라 모든 가게 주문 상태 변경 가능
+         *
+         * 현재는 Store/User 도메인 연동 전이므로
+         * storeId가 주문의 storeId와 일치하는지만 검증한다.
+         */
+
+        // 상태 전이 가능 여부 검증
+        validateStatusTransition(order, nextStatus);
+
+        // 주문 상태 변경
+        order.changeStatus(nextStatus);
+
+        return OrderStatusResponse.from(order);
+    }
+
+
+    // 삭제되지 않은 주문 조회 메서드 (공통)
+    private Order findActiveOrder(UUID orderId) {
+        return orderRepository.findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() ->
+                        new BusinessException(OrderErrorCode.ORDER_NOT_FOUND)
+                );
+    }
+
+    // 주문이 해당 가게에 속하는지 검증
+    private void validateOrderBelongsToStore(Order order, UUID storeId) {
+        if (!order.getStoreId().equals(storeId)) {
+            throw new BusinessException(OrderErrorCode.ORDER_STORE_MISMATCH);
+        }
+    }
+
+    // 주문 상태 전이 검증 (공통)
+    private void validateStatusTransition(Order order, OrderStatus nextStatus) {
+
+        // 현재 주문 상태
+        OrderStatus currentStatus = order.getStatus();
+
+        // 이미 종료된 주문은 더 이상 상태 변경 불가
+        if (currentStatus == OrderStatus.COMPLETED
+                || currentStatus == OrderStatus.REJECTED
+                || currentStatus == OrderStatus.CUSTOMER_CANCELLED) {
+            throw new BusinessException(OrderErrorCode.ORDER_ALREADY_TERMINATED);
+        }
+
+        // 현재 상태에서 다음 상태로 변경 가능한지 확인
+        boolean validTransition = switch (currentStatus) {
+
+            // 고객이 주문을 요청한 상태
+            // REQUESTED → ACCEPTED / REJECTED / CUSTOMER_CANCELLED 가능
+            case REQUESTED ->
+                    nextStatus == OrderStatus.ACCEPTED
+                            || nextStatus == OrderStatus.REJECTED
+                            || nextStatus == OrderStatus.CUSTOMER_CANCELLED;
+
+            // 가게가 주문을 수락한 상태
+            // ACCEPTED → COOKING 가능
+            case ACCEPTED ->
+                    nextStatus == OrderStatus.COOKING;
+
+            // 조리 중
+            // COOKING → DELIVERING 가능
+            case COOKING ->
+                    nextStatus == OrderStatus.DELIVERING;
+
+            // 배달 중
+            // DELIVERING → DELIVERED 가능
+            case DELIVERING ->
+                    nextStatus == OrderStatus.DELIVERED;
+
+            // 배달 완료
+            // DELIVERED → COMPLETED 가능
+            case DELIVERED ->
+                    nextStatus == OrderStatus.COMPLETED;
+
+            default -> false;
+        };
+
+        // 허용되지 않은 상태 변경이면 예외 발생
+        if (!validTransition) {
+            throw new BusinessException(OrderErrorCode.INVALID_ORDER_STATUS_TRANSITION);
+        }
+    }
+
+    // 고객 주문 취소 5분 제한 검증
+    private void validateCancelTime(Order order) {
+        // 주문 생성 후 5분 이내에만 고객 취소 가능
+        LocalDateTime cancelDeadline = order.getCreatedAt().plusMinutes(5);
+
+        if (LocalDateTime.now().isAfter(cancelDeadline)) {
+            throw new BusinessException(OrderErrorCode.ORDER_CANCEL_TIME_EXPIRED);
+        }
     }
 
 

@@ -1,4 +1,4 @@
-package com.delivery.domain.order.enums;
+package com.delivery.domain.order.exception;
 
 import com.delivery.global.exception.ErrorCode;
 import org.springframework.http.HttpStatus;

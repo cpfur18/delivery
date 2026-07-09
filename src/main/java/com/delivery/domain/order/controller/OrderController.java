@@ -5,6 +5,7 @@ import com.delivery.domain.order.dto.request.OrderCreateRequest;
 import com.delivery.domain.order.dto.response.OrderCreateResponse;
 import com.delivery.domain.order.dto.response.OrderDetailResponse;
 import com.delivery.domain.order.dto.response.OrderListResponse;
+import com.delivery.domain.order.dto.response.OrderStatusResponse;
 import com.delivery.domain.order.enums.OrderStatus;
 import com.delivery.domain.order.service.OrderService;
 import jakarta.validation.Valid;
@@ -183,6 +184,192 @@ public class OrderController {
         );
     }
 
+
+    // 주문 상태 변경 7가지
+    // 고객 주문 취소 or 가게 주문 거절
+    // 가게 주문 수락 -> 조리중 -> 배달 중 -> 배달 완료 -> 주문 최종 완료(리뷰 가능)
+
+    // 고객 주문 취소
+    @PatchMapping("/orders/{orderId}/cancel")
+    // TODO: Spring Security/JWT 연동 후 CUSTOMER 권한 적용
+    // @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<RestApiResponse<OrderStatusResponse>> cancelOrder(
+            @PathVariable UUID orderId
+    ) {
+        // TODO: JWT 적용 후 인증 객체에서 로그인 고객 ID 추출
+        Long currentUserId = 1L;
+
+        OrderStatusResponse response =
+                orderService.cancelOrder(orderId, currentUserId);
+
+        return ResponseEntity.ok(
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "주문이 취소되었습니다.",
+                        response
+                )
+        );
+    }
+
+    // 가게 주문 거절
+    @PatchMapping("/stores/{storeId}/orders/{orderId}/reject")
+    // TODO: Spring Security/JWT 연동 후 OWNER 권한 적용
+    // @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<RestApiResponse<OrderStatusResponse>> rejectOrder(
+            @PathVariable UUID storeId,
+            @PathVariable UUID orderId
+    ) {
+        // TODO: JWT 적용 후 인증 객체에서 로그인 가게 사장 ID 추출
+        Long currentUserId = 1L;
+
+        OrderStatusResponse response =
+                orderService.changeStoreOrderStatus(
+                        storeId,
+                        orderId,
+                        OrderStatus.REJECTED,
+                        currentUserId
+                );
+
+        return ResponseEntity.ok(
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "주문이 거절되었습니다.",
+                        response
+                )
+        );
+    }
+
+
+    // 가게 주문 수락
+    @PatchMapping("/stores/{storeId}/orders/{orderId}/accept")
+    // TODO: Spring Security/JWT 연동 후 OWNER 권한 적용
+    // @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<RestApiResponse<OrderStatusResponse>> acceptOrder(
+            @PathVariable UUID storeId,
+            @PathVariable UUID orderId
+    ) {
+        Long currentUserId = 1L;
+
+        OrderStatusResponse response =
+                orderService.changeStoreOrderStatus(
+                        storeId,
+                        orderId,
+                        OrderStatus.ACCEPTED,
+                        currentUserId
+                );
+
+        return ResponseEntity.ok(
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "주문이 수락되었습니다.",
+                        response
+                )
+        );
+    }
+
+    // 가게 조리 중 변경
+    @PatchMapping("/stores/{storeId}/orders/{orderId}/cook")
+    // TODO: Spring Security/JWT 연동 후 OWNER 권한 적용
+    // @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<RestApiResponse<OrderStatusResponse>> startCooking(
+            @PathVariable UUID storeId,
+            @PathVariable UUID orderId
+    ) {
+        Long currentUserId = 1L;
+
+        OrderStatusResponse response =
+                orderService.changeStoreOrderStatus(
+                        storeId,
+                        orderId,
+                        OrderStatus.COOKING,
+                        currentUserId
+                );
+
+        return ResponseEntity.ok(
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "주문 상태가 조리 중으로 변경되었습니다.",
+                        response
+                )
+        );
+    }
+
+    // 배달 중 변경
+    @PatchMapping("/stores/{storeId}/orders/{orderId}/deliver")
+    // TODO: Spring Security/JWT 연동 후 OWNER 권한 적용
+    // @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<RestApiResponse<OrderStatusResponse>> startDelivery(
+            @PathVariable UUID storeId,
+            @PathVariable UUID orderId
+    ) {
+        Long currentUserId = 1L;
+
+        OrderStatusResponse response =
+                orderService.changeStoreOrderStatus(
+                        storeId,
+                        orderId,
+                        OrderStatus.DELIVERING,
+                        currentUserId
+                );
+
+        return ResponseEntity.ok(
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "주문 상태가 배달 중으로 변경되었습니다.",
+                        response
+                )
+        );
+    }
+
+    // 배달 완료 변경
+    @PatchMapping("/stores/{storeId}/orders/{orderId}/delivered")
+    // TODO: Spring Security/JWT 연동 후 OWNER 권한 적용
+    // @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<RestApiResponse<OrderStatusResponse>> completeDelivery(
+            @PathVariable UUID storeId,
+            @PathVariable UUID orderId
+    ) {
+        Long currentUserId = 1L;
+
+        OrderStatusResponse response =
+                orderService.changeStoreOrderStatus(
+                        storeId,
+                        orderId,
+                        OrderStatus.DELIVERED,
+                        currentUserId
+                );
+
+        return ResponseEntity.ok(
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "주문 상태가 배달 완료로 변경되었습니다.",
+                        response
+                )
+        );
+    }
+
+
+    // 고객 주문 최종 완료
+    @PatchMapping("/orders/{orderId}/complete")
+    // TODO: Spring Security/JWT 연동 후 CUSTOMER 권한 적용
+    // @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<RestApiResponse<OrderStatusResponse>> completeOrder(
+            @PathVariable UUID orderId
+    ) {
+        // TODO: JWT 적용 후 인증 객체에서 로그인 고객 ID 추출
+        Long currentUserId = 1L;
+
+        OrderStatusResponse response =
+                orderService.completeOrder(orderId, currentUserId);
+
+        return ResponseEntity.ok(
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "주문이 최종 완료되었습니다.",
+                        response
+                )
+        );
+    }
 
 
 }

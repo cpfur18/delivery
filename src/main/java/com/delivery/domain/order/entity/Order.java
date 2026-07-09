@@ -71,7 +71,7 @@ public class Order extends BaseEntity {
         this.totalPrice += orderItem.getSubtotalPrice();
     }
 
-    public void changeStatus(OrderStatus status, String updatedBy) {
+    public void changeStatus(OrderStatus status) {
         this.status = status;
 
         if (status == OrderStatus.COMPLETED) {
