@@ -16,8 +16,8 @@ import com.delivery.domain.menu.dto.request.ReqUpdateMenuDtoV1;
 import com.delivery.domain.menu.dto.request.ReqUpdateMenuVisibilityDtoV1;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
+import com.delivery.domain.menu.exception.MenuException;
 import com.delivery.domain.menu.service.MenuServiceV1;
-import com.delivery.global.exception.BusinessException;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.jwt.JwtRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -125,7 +125,7 @@ class MenuControllerV1Test {
         void getMenu_returns404_whenNotFound() throws Exception {
             UUID menuId = UUID.randomUUID();
             given(menuService.getMenu(menuId))
-                    .willThrow(new BusinessException(MenuErrorCode.MENU_NOT_FOUND));
+                    .willThrow(new MenuException(MenuErrorCode.MENU_NOT_FOUND));
 
             mockMvc.perform(get("/api/v1/menus/{menuId}", menuId))
                     .andExpect(status().isNotFound())

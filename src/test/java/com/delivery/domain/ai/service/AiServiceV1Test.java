@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.delivery.domain.ai.client.GeminiClient;
 import com.delivery.domain.ai.exception.AiErrorCode;
+import com.delivery.domain.ai.exception.AiException;
 import com.delivery.domain.ai.repository.AiLogRepository;
 import com.delivery.global.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
@@ -55,7 +56,7 @@ class AiServiceV1Test {
         void generateProductDescription_throwsWhenPromptTooLong() {
             String longPrompt = "a".repeat(201);
 
-            assertThatExceptionOfType(BusinessException.class)
+            assertThatExceptionOfType(AiException.class)
                     .isThrownBy(() -> aiServiceV1.generateProductDescription(longPrompt))
                     .extracting(BusinessException::getErrorCode)
                     .isEqualTo(AiErrorCode.AI_PROMPT_TOO_LONG);
@@ -68,7 +69,7 @@ class AiServiceV1Test {
         void generateProductDescription_throwsAndLogsFailure_whenGeminiFails() {
             given(geminiClient.generateContent(any())).willThrow(new RestClientException("연결 실패"));
 
-            assertThatExceptionOfType(BusinessException.class)
+            assertThatExceptionOfType(AiException.class)
                     .isThrownBy(() -> aiServiceV1.generateProductDescription("김치찌개 설명 써줘"))
                     .extracting(BusinessException::getErrorCode)
                     .isEqualTo(AiErrorCode.AI_GENERATION_FAILED);

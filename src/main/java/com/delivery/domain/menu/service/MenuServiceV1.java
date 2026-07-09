@@ -1,11 +1,12 @@
 package com.delivery.domain.menu.service;
 
 import com.delivery.domain.ai.exception.AiErrorCode;
+import com.delivery.domain.ai.exception.AiException;
 import com.delivery.domain.ai.service.AiServiceV1;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
+import com.delivery.domain.menu.exception.MenuException;
 import com.delivery.domain.menu.repository.MenuRepository;
-import com.delivery.global.exception.BusinessException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class MenuServiceV1 {
         String finalDescription = description;
         if (aiGeneration) {
             if (aiPrompt == null || aiPrompt.isBlank()) {
-                throw new BusinessException(AiErrorCode.AI_PROMPT_REQUIRED);
+                throw new AiException(AiErrorCode.AI_PROMPT_REQUIRED);
             }
             finalDescription = aiServiceV1.generateProductDescription(aiPrompt);
         }
@@ -54,7 +55,7 @@ public class MenuServiceV1 {
     public MenuEntity getMenu(UUID menuId) {
         return menuRepository
                 .findByMenuIdAndDeletedAtIsNull(menuId)
-                .orElseThrow(() -> new BusinessException(MenuErrorCode.MENU_NOT_FOUND));
+                .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_NOT_FOUND));
     }
 
     // 메뉴 수정

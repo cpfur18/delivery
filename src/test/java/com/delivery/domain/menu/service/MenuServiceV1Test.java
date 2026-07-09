@@ -8,9 +8,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.delivery.domain.ai.exception.AiErrorCode;
+import com.delivery.domain.ai.exception.AiException;
 import com.delivery.domain.ai.service.AiServiceV1;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
+import com.delivery.domain.menu.exception.MenuException;
 import com.delivery.domain.menu.repository.MenuRepository;
 import com.delivery.global.exception.BusinessException;
 import java.util.List;
@@ -71,7 +73,7 @@ class MenuServiceV1Test {
         @DisplayName("aiGeneration이 true인데 aiPrompt가 비어있으면 AI_PROMPT_REQUIRED 예외를 던진다")
         void createMenu_withAiGenerationButNoPrompt_throws() {
 
-            assertThatExceptionOfType(BusinessException.class)
+            assertThatExceptionOfType(AiException.class)
                     .isThrownBy(
                             () -> menuService.createMenu(STORE_ID, "김치찌개", null, 8000, true, " "))
                     .extracting(BusinessException::getErrorCode)
@@ -109,7 +111,7 @@ class MenuServiceV1Test {
             given(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
                     .willReturn(Optional.empty());
 
-            assertThatExceptionOfType(BusinessException.class)
+            assertThatExceptionOfType(MenuException.class)
                     .isThrownBy(() -> menuService.getMenu(menuId))
                     .extracting(BusinessException::getErrorCode)
                     .isEqualTo(MenuErrorCode.MENU_NOT_FOUND);

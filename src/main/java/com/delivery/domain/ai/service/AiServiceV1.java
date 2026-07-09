@@ -4,8 +4,8 @@ import com.delivery.domain.ai.client.GeminiClient;
 import com.delivery.domain.ai.entity.AiLogEntity;
 import com.delivery.domain.ai.entity.AiRequestType;
 import com.delivery.domain.ai.exception.AiErrorCode;
+import com.delivery.domain.ai.exception.AiException;
 import com.delivery.domain.ai.repository.AiLogRepository;
-import com.delivery.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -22,7 +22,7 @@ public class AiServiceV1 {
 
     public String generateProductDescription(String prompt) {
         if (prompt.length() > PROMPT_MAX_LENGTH) {
-            throw new BusinessException(AiErrorCode.AI_PROMPT_TOO_LONG);
+            throw new AiException(AiErrorCode.AI_PROMPT_TOO_LONG);
         }
 
         String finalPrompt = prompt + CONCISE_SUFFIX;
@@ -37,7 +37,7 @@ public class AiServiceV1 {
             aiLogRepository.save(
                     new AiLogEntity(
                             AiRequestType.PRODUCT_DESCRIPTION, null, finalPrompt, null, false));
-            throw new BusinessException(AiErrorCode.AI_GENERATION_FAILED);
+            throw new AiException(AiErrorCode.AI_GENERATION_FAILED);
         }
     }
 }
