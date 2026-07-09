@@ -2,6 +2,7 @@ package com.delivery.domain.menu.controller;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -59,10 +60,17 @@ class MenuControllerV1Test {
         @DisplayName("생성에 성공하면 201과 생성된 메뉴를 반환한다")
         void createMenu_returns201() throws Exception {
             MenuEntity menu = new MenuEntity(STORE_ID, "김치찌개", "설명", 8000);
-            given(menuService.createMenu(eq(STORE_ID), eq("김치찌개"), eq("설명"), eq(8000)))
+            given(
+                            menuService.createMenu(
+                                    eq(STORE_ID),
+                                    eq("김치찌개"),
+                                    eq("설명"),
+                                    eq(8000),
+                                    eq(false),
+                                    isNull()))
                     .willReturn(menu);
 
-            ReqCreateMenuDtoV1 request = new ReqCreateMenuDtoV1("김치찌개", "설명", 8000);
+            ReqCreateMenuDtoV1 request = new ReqCreateMenuDtoV1("김치찌개", "설명", 8000, false, null);
 
             mockMvc.perform(
                             post("/api/v1/stores/{storeId}/menus", STORE_ID)

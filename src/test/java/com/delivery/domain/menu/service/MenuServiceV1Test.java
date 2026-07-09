@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import com.delivery.domain.ai.service.AiServiceV1;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.menu.repository.MenuRepository;
@@ -28,6 +29,8 @@ class MenuServiceV1Test {
 
     @Mock private MenuRepository menuRepository;
 
+    @Mock private AiServiceV1 aiServiceV1;
+
     @InjectMocks private MenuServiceV1 menuService;
 
     @Nested
@@ -42,7 +45,7 @@ class MenuServiceV1Test {
 
             given(menuRepository.save(any(MenuEntity.class))).willReturn(saved);
 
-            MenuEntity result = menuService.createMenu(STORE_ID, "김치찌개", "설명", 8000);
+            MenuEntity result = menuService.createMenu(STORE_ID, "김치찌개", "설명", 8000, false, null);
 
             assertThat(result).isEqualTo(saved);
             verify(menuRepository).save(any(MenuEntity.class));

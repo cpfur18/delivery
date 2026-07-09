@@ -8,6 +8,7 @@ import com.delivery.domain.menu.dto.response.ResMenuDtoV1;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.service.MenuServiceV1;
 import com.delivery.global.security.config.CustomUserDetails;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -30,15 +31,19 @@ public class MenuControllerV1 {
     private final MenuServiceV1 menuService;
 
     // 메뉴 등록
-    // TODO: aiGeneration/aiPrompt 요청 필드 + AiService 연동 추가 예정 (MVP2)
     // TODO: Store 연동 후 실제 소유권(owner) 검증 추가 필요 — 지금은 역할(Role)만 체크
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
     @PostMapping("/api/v1/stores/{storeId}/menus")
     public ResponseEntity<RestApiResponse<ResMenuDtoV1>> createMenu(
-            @PathVariable UUID storeId, @RequestBody ReqCreateMenuDtoV1 request) {
+            @PathVariable UUID storeId, @Valid @RequestBody ReqCreateMenuDtoV1 request) {
         MenuEntity menu =
                 menuService.createMenu(
-                        storeId, request.name(), request.description(), request.price());
+                        storeId,
+                        request.name(),
+                        request.description(),
+                        request.price(),
+                        request.aiGeneration(),
+                        request.aiPrompt());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         RestApiResponse.success(

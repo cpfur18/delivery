@@ -1,5 +1,7 @@
 package com.delivery.domain.menu.service;
 
+import com.delivery.domain.ai.exception.AiErrorCode;
+import com.delivery.domain.ai.service.AiServiceV1;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.menu.repository.MenuRepository;
@@ -16,11 +18,26 @@ import org.springframework.transaction.annotation.Transactional;
 public class MenuServiceV1 {
 
     private final MenuRepository menuRepository;
+    private final AiServiceV1 aiServiceV1;
 
     // 메뉴 생성
     @Transactional
-    public MenuEntity createMenu(UUID storeId, String name, String description, int price) {
-        MenuEntity menu = new MenuEntity(storeId, name, description, price);
+    public MenuEntity createMenu(
+            UUID storeId,
+            String name,
+            String description,
+            int price,
+            boolean aiGeneration,
+            String aiPrompt) {
+        String finalDescription = description;
+        if (aiGeneration) {
+            if (aiPrompt == null || aiPrompt.isBlank()) {
+                throw new BusinessException(AiErrorCode.AI_PROMPT_REQUIRED);
+            }
+            finalDescription = aiServiceV1.generateProductDescription(aiPrompt);
+        }
+
+        MenuEntity menu = new MenuEntity(storeId, name, finalDescription, price);
         return menuRepository.save(menu);
     }
 
