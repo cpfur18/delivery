@@ -5,9 +5,11 @@ import com.delivery.domain.ai.entity.AiRequestType;
 import com.delivery.domain.ai.exception.AiErrorCode;
 import com.delivery.domain.ai.exception.AiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiService {
@@ -31,6 +33,7 @@ public class AiService {
                     AiRequestType.PRODUCT_DESCRIPTION, null, finalPrompt, response, true);
             return response;
         } catch (RestClientException e) {
+            log.error("Gemini 호출 실패: {}", e.getMessage(), e);
             aiLogService.saveLog(AiRequestType.PRODUCT_DESCRIPTION, null, finalPrompt, null, false);
             throw new AiException(AiErrorCode.AI_GENERATION_FAILED);
         }
