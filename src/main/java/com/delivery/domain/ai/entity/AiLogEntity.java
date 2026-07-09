@@ -46,16 +46,32 @@ public class AiLogEntity extends BaseCreatedEntity {
     @Column(name = "is_success", nullable = false, columnDefinition = "boolean default true")
     private boolean success;
 
+    // 실패 원인 - 성공 시 NULL. 서버 로그가 유실/회전되어도 DB에서 바로 원인을 조회할 수
+    // 있도록 함(관리자용 AI 로그 조회 API에서 사용 예정). 예외 메시지가 길 수 있어 길이 제한.
+    @Column(name = "error_message", length = 500)
+    private String errorMessage;
+
+    private static final int ERROR_MESSAGE_MAX_LENGTH = 500;
+
     public AiLogEntity(
             AiRequestType requestType,
             UUID referenceId,
             String requestText,
             String responseText,
-            boolean success) {
+            boolean success,
+            String errorMessage) {
         this.requestType = requestType;
         this.referenceId = referenceId;
         this.requestText = requestText;
         this.responseText = responseText;
         this.success = success;
+        this.errorMessage = truncate(errorMessage);
+    }
+
+    private static String truncate(String value) {
+        if (value == null || value.length() <= ERROR_MESSAGE_MAX_LENGTH) {
+            return value;
+        }
+        return value.substring(0, ERROR_MESSAGE_MAX_LENGTH);
     }
 }

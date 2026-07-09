@@ -50,7 +50,8 @@ class AiServiceTest {
                             isNull(),
                             any(),
                             eq("맛있는 설명"),
-                            eq(true));
+                            eq(true),
+                            isNull());
         }
 
         @Test
@@ -82,7 +83,8 @@ class AiServiceTest {
                             isNull(),
                             any(),
                             isNull(),
-                            eq(false));
+                            eq(false),
+                            eq("연결 실패"));
         }
     }
 }

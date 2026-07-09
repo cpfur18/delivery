@@ -23,8 +23,15 @@ public class AiLogService {
             UUID referenceId,
             String requestText,
             String responseText,
-            boolean success) {
+            boolean success,
+            String errorMessage) {
         aiLogRepository.save(
-                new AiLogEntity(requestType, referenceId, requestText, responseText, success));
+                new AiLogEntity(
+                        requestType,
+                        referenceId,
+                        requestText,
+                        responseText,
+                        success,
+                        errorMessage));
     }
 }

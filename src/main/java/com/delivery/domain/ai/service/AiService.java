@@ -30,11 +30,17 @@ public class AiService {
         try {
             String response = geminiClient.generateContent(finalPrompt);
             aiLogService.saveLog(
-                    AiRequestType.PRODUCT_DESCRIPTION, null, finalPrompt, response, true);
+                    AiRequestType.PRODUCT_DESCRIPTION, null, finalPrompt, response, true, null);
             return response;
         } catch (RestClientException e) {
             log.error("Gemini 호출 실패: {}", e.getMessage(), e);
-            aiLogService.saveLog(AiRequestType.PRODUCT_DESCRIPTION, null, finalPrompt, null, false);
+            aiLogService.saveLog(
+                    AiRequestType.PRODUCT_DESCRIPTION,
+                    null,
+                    finalPrompt,
+                    null,
+                    false,
+                    e.getMessage());
             throw new AiException(AiErrorCode.AI_GENERATION_FAILED);
         }
     }
