@@ -4,6 +4,8 @@ import com.delivery.domain.store.dto.CategoryRequestDto;
 import com.delivery.domain.store.dto.CategoryResponseDto;
 import com.delivery.domain.store.entity.Category;
 import com.delivery.domain.store.repository.CategoryRepository;
+import com.delivery.global.exception.StoreErrorCode;
+import com.delivery.global.exception.StoreException;
 import lombok.RequiredArgsConstructor;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,7 @@ public class CategoryService {
     @Transactional
     public CategoryResponseDto createCategory(CategoryRequestDto request) {
         if (categoryRepository.existsByName(request.getName())) {
-            throw new RuntimeException("이미 등록된 카테고리입니다.");
+            throw new StoreException(StoreErrorCode.DUPLICATE_CATEGORY);
         }
 
         Category category = Category.builder()
@@ -42,10 +44,10 @@ public class CategoryService {
     @Transactional
     public CategoryResponseDto updateCategory(UUID categoryId, CategoryRequestDto request) {
         Category category = categoryRepository.findByCategoryIdAndDeletedAtIsNull(categoryId)
-                .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
         if (categoryRepository.existsByName(request.getName())) {
-            throw new RuntimeException("이미 등록된 카테고리입니다.");
+            throw new StoreException(StoreErrorCode.DUPLICATE_CATEGORY);
         }
 
         category.update(request.getName());
@@ -55,7 +57,7 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(UUID categoryId, String deletedBy) {
         Category category = categoryRepository.findByCategoryIdAndDeletedAtIsNull(categoryId)
-                .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
         category.delete(deletedBy);
     }

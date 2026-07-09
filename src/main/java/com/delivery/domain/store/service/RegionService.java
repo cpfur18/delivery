@@ -4,6 +4,8 @@ import com.delivery.domain.store.dto.RegionRequestDto;
 import com.delivery.domain.store.dto.RegionResponseDto;
 import com.delivery.domain.store.entity.Region;
 import com.delivery.domain.store.repository.RegionRepository;
+import com.delivery.global.exception.StoreErrorCode;
+import com.delivery.global.exception.StoreException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +23,7 @@ public class RegionService {
     @Transactional
     public RegionResponseDto createRegion(RegionRequestDto request) {
         if (regionRepository.existsByName(request.getName())) {
-            throw new RuntimeException("이미 등록된 지역입니다.");
+            throw new StoreException(StoreErrorCode.DUPLICATE_REGION);
         }
 
         Region region = Region.builder()
@@ -44,7 +46,7 @@ public class RegionService {
     @Transactional
     public RegionResponseDto updateRegion(UUID regionId, RegionRequestDto request) {
         Region region = regionRepository.findByRegionIdAndDeletedAtIsNull(regionId)
-                .orElseThrow(() -> new RuntimeException("지역을 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
         region.update(request.getName(), request.getLatitude(), request.getLongitude());
         return RegionResponseDto.from(region);
@@ -53,7 +55,7 @@ public class RegionService {
     @Transactional
     public void deleteRegion(UUID regionId, String deletedBy) {
         Region region = regionRepository.findByRegionIdAndDeletedAtIsNull(regionId)
-                .orElseThrow(() -> new RuntimeException("지역을 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
         region.delete(deletedBy);
     }

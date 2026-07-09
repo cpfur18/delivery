@@ -7,6 +7,8 @@ import com.delivery.domain.store.entity.Store;
 import com.delivery.domain.store.repository.CategoryRepository;
 import com.delivery.domain.store.repository.RegionRepository;
 import com.delivery.domain.store.repository.StoreRepository;
+import com.delivery.global.exception.StoreErrorCode;
+import com.delivery.global.exception.StoreException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,14 +32,14 @@ public class StoreService {
     public StoreResponseDto createStore(Long userId, StoreRequestDto request) {
 
         if (storeRepository.existsByUserIdAndNameAndRegionIdAndDeletedAtIsNull(userId, request.getName(), request.getRegionId())) {
-            throw new RuntimeException("이미 등록된 가게입니다.");
+            throw new StoreException(StoreErrorCode.DUPLICATE_STORE);
         }
 
         categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
         regionRepository.findById(request.getRegionId())
-                .orElseThrow(() -> new RuntimeException("지역을 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
         Store store = Store.builder()
                 .userId(userId)
@@ -66,7 +68,7 @@ public class StoreService {
     @Transactional(readOnly = true)
     public StoreResponseDto getStore(UUID storeId) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
-                .orElseThrow(() -> new RuntimeException("가게를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
         return StoreResponseDto.from(store);
     }
 
@@ -74,13 +76,13 @@ public class StoreService {
     @Transactional
     public StoreResponseDto updateStore(UUID storeId, Long userId, StoreRequestDto request) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
-                .orElseThrow(() -> new RuntimeException("가게를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
         categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
         regionRepository.findById(request.getRegionId())
-                .orElseThrow(() -> new RuntimeException("지역을 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
         store.update(request);
         return StoreResponseDto.from(store);
@@ -90,7 +92,7 @@ public class StoreService {
     @Transactional
     public StoreResponseDto updateStoreStatus(UUID storeId, Long userId, Boolean isOpen) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
-                .orElseThrow(() -> new RuntimeException("가게를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
         store.updateStatus(isOpen);
         return StoreResponseDto.from(store);
@@ -100,7 +102,7 @@ public class StoreService {
     @Transactional
     public void deleteStore(UUID storeId, Long userId) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
-                .orElseThrow(() -> new RuntimeException("가게를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
         store.delete(userId.toString());
     }
@@ -109,7 +111,7 @@ public class StoreService {
     @Transactional
     public void updateAverageRating(UUID storeId) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
-                .orElseThrow(() -> new RuntimeException("가게를 찾을 수 없습니다."));
+                .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
         Double average = reviewRepository.findAverageRatingByStoreId(storeId);
         store.updateAverageRating(average);
