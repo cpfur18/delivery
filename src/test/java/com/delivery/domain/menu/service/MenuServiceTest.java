@@ -26,6 +26,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class MenuServiceTest {
@@ -36,7 +38,20 @@ class MenuServiceTest {
 
     @Mock private AiService aiService;
 
+    @Mock private TransactionTemplate transactionTemplate;
+
     @InjectMocks private MenuService menuService;
+
+    // TransactionTemplate은 실제로는 콜백을 실행하고 그 결과를 반환하므로,
+    // 목에서도 동일하게 동작하도록 스텁 - 아니면 항상 null이 반환됨.
+    private void stubTransactionTemplateToRunCallback() {
+        given(transactionTemplate.execute(any()))
+                .willAnswer(
+                        invocation -> {
+                            TransactionCallback<?> callback = invocation.getArgument(0);
+                            return callback.doInTransaction(null);
+                        });
+    }
 
     @Nested
     @DisplayName("메뉴 생성")
@@ -46,6 +61,7 @@ class MenuServiceTest {
         @DisplayName("리포지토리에 저장하고 저장된 엔티티 기반의 응답을 반환한다")
         void createMenu_savesAndReturns() {
 
+            stubTransactionTemplateToRunCallback();
             MenuEntity saved = new MenuEntity(STORE_ID, "김치찌개", "설명", 8000);
 
             given(menuRepository.save(any(MenuEntity.class))).willReturn(saved);
@@ -60,6 +76,7 @@ class MenuServiceTest {
         @DisplayName("aiGeneration이 true면 AI가 생성한 설명으로 메뉴를 생성한다")
         void createMenu_withAiGeneration_usesGeneratedDescription() {
 
+            stubTransactionTemplateToRunCallback();
             given(aiService.generateProductDescription("김치찌개 설명 써줘")).willReturn("AI가 만든 설명");
             given(menuRepository.save(any(MenuEntity.class)))
                     .willAnswer(invocation -> invocation.getArgument(0));

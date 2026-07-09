@@ -2,9 +2,12 @@ package com.delivery.domain.ai.client;
 
 import com.delivery.domain.ai.dto.gemini.GeminiGenerateContentRequest;
 import com.delivery.domain.ai.dto.gemini.GeminiGenerateContentResponse;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -14,11 +17,12 @@ import org.springframework.web.client.RestClient;
 @Component
 public class GeminiClient {
 
-    // Gemini가 응답을 안 주면 요청 스레드가 무한 대기하지 않도록 타임아웃을 둠 -
-    // 이 호출이 호출자(MenuService.createMenu)의 DB 트랜잭션 안에서 일어나므로,
-    // 타임아웃이 없으면 커넥션을 물고 무한정 기다릴 수 있음.
-    private static final int CONNECT_TIMEOUT_MILLIS = 5_000;
-    private static final int READ_TIMEOUT_MILLIS = 15_000;
+    // Gemini가 응답을 안 주면 요청 스레드가 무한 대기하지 않도록 타임아웃을 둠.
+    // 실제로 Gemini 응답이 16초 넘게 걸리는 경우가 있어(직접 curl로 확인, server-timing
+    // dur=16098) read timeout을 30초로 넉넉하게 잡음 - 너무 타이트하면 정상 응답도
+    // 타임아웃으로 오탐하게 됨.
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(30);
 
     // RestClient: Spring Boot 3.2+에 내장된 동기 HTTP 클라이언트.
     // RestTemplate의 최신 대체제 - Builder로 baseUrl 등 공통 설정을 미리 잡아두고 재사용함.
@@ -31,9 +35,16 @@ public class GeminiClient {
             @Value("${gemini.base-url}") String baseUrl,
             @Value("${gemini.api-key}") String apiKey,
             @Value("${gemini.model}") String model) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
-        requestFactory.setReadTimeout(READ_TIMEOUT_MILLIS);
+        // ClientHttpRequestFactoryBuilder.jdk()는 RestClient가 팩토리 미지정 시 쓰는
+        // 기본 구현(JDK HttpClient)과 동일함 - SimpleClientHttpRequestFactory(구식
+        // HttpURLConnection 기반)는 Gemini 응답의 Content-Type을 application/octet-stream으로
+        // 잘못 처리하는 문제가 있어서 타임아웃만 얹은 이 방식으로 교체함.
+        ClientHttpRequestFactory requestFactory =
+                ClientHttpRequestFactoryBuilder.jdk()
+                        .build(
+                                ClientHttpRequestFactorySettings.defaults()
+                                        .withConnectTimeout(CONNECT_TIMEOUT)
+                                        .withReadTimeout(READ_TIMEOUT));
 
         this.restClient = restClientBuilder.baseUrl(baseUrl).requestFactory(requestFactory).build();
         this.apiKey = apiKey;

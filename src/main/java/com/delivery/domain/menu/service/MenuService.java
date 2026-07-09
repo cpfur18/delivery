@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -21,9 +23,13 @@ public class MenuService {
 
     private final MenuRepository menuRepository;
     private final AiService aiService;
+    private final TransactionTemplate transactionTemplate;
 
     // 메뉴 생성
-    @Transactional
+    // 외부 Gemini API 호출(aiService)이 DB 트랜잭션/커넥션을 물고 있지 않도록,
+    // 이 메서드 자체는 트랜잭션 밖에서 실행되게 강제하고(NOT_SUPPORTED로 클래스 레벨
+    // readOnly 트랜잭션을 덮어씀), 실제 DB 저장만 TransactionTemplate으로 짧게 묶는다.
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public MenuResponse createMenu(
             UUID storeId,
             String name,
@@ -41,8 +47,15 @@ public class MenuService {
             finalDescription = aiService.generateProductDescription(aiPrompt);
         }
 
-        MenuEntity menu = new MenuEntity(storeId, name, finalDescription, price);
-        return MenuResponse.from(menuRepository.save(menu));
+        return saveMenu(storeId, name, finalDescription, price);
+    }
+
+    private MenuResponse saveMenu(UUID storeId, String name, String description, int price) {
+        return transactionTemplate.execute(
+                status -> {
+                    MenuEntity menu = new MenuEntity(storeId, name, description, price);
+                    return MenuResponse.from(menuRepository.save(menu));
+                });
     }
 
     // 메뉴 목록 조회
