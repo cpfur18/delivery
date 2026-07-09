@@ -83,6 +83,34 @@ class MenuControllerV1Test {
                     .andExpect(jsonPath("$.data.price").value(8000))
                     .andExpect(jsonPath("$.data.hidden").value(false));
         }
+
+        @Test
+        @DisplayName("이름이 비어있으면 400과 INVALID_MENU_NAME 에러를 반환한다")
+        void createMenu_returns400_whenNameBlank() throws Exception {
+            ReqCreateMenuDtoV1 request = new ReqCreateMenuDtoV1("", "설명", 8000, false, null);
+
+            mockMvc.perform(
+                            post("/api/v1/stores/{storeId}/menus", STORE_ID)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.error").value("INVALID_MENU_NAME"));
+        }
+
+        @Test
+        @DisplayName("가격이 0 이하이면 400과 INVALID_MENU_PRICE 에러를 반환한다")
+        void createMenu_returns400_whenPriceNotPositive() throws Exception {
+            ReqCreateMenuDtoV1 request = new ReqCreateMenuDtoV1("김치찌개", "설명", 0, false, null);
+
+            mockMvc.perform(
+                            post("/api/v1/stores/{storeId}/menus", STORE_ID)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.error").value("INVALID_MENU_PRICE"));
+        }
     }
 
     @Nested
@@ -157,6 +185,34 @@ class MenuControllerV1Test {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.name").value("된장찌개"))
                     .andExpect(jsonPath("$.data.price").value(9000));
+        }
+
+        @Test
+        @DisplayName("이름이 비어있으면 400과 INVALID_MENU_NAME 에러를 반환한다")
+        void updateMenu_returns400_whenNameBlank() throws Exception {
+            UUID menuId = UUID.randomUUID();
+            ReqUpdateMenuDtoV1 request = new ReqUpdateMenuDtoV1("", "새 설명", 9000);
+
+            mockMvc.perform(
+                            patch("/api/v1/menus/{menuId}", menuId)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("INVALID_MENU_NAME"));
+        }
+
+        @Test
+        @DisplayName("가격이 0 이하이면 400과 INVALID_MENU_PRICE 에러를 반환한다")
+        void updateMenu_returns400_whenPriceNotPositive() throws Exception {
+            UUID menuId = UUID.randomUUID();
+            ReqUpdateMenuDtoV1 request = new ReqUpdateMenuDtoV1("된장찌개", "새 설명", 0);
+
+            mockMvc.perform(
+                            patch("/api/v1/menus/{menuId}", menuId)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("INVALID_MENU_PRICE"));
         }
     }
 
