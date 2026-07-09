@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Configuration
 @EnableJpaAuditing
+// @EnableJpaAuditing(auditorAwareRef = "customAuditorAware")
 public class JpaAuditingConfig {
 
     @Bean
