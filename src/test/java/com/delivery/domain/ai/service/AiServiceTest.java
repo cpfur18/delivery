@@ -3,15 +3,16 @@ package com.delivery.domain.ai.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.delivery.domain.ai.client.GeminiClient;
+import com.delivery.domain.ai.entity.AiRequestType;
 import com.delivery.domain.ai.exception.AiErrorCode;
 import com.delivery.domain.ai.exception.AiException;
-import com.delivery.domain.ai.repository.AiLogRepository;
 import com.delivery.global.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,7 +28,7 @@ class AiServiceTest {
 
     @Mock private GeminiClient geminiClient;
 
-    @Mock private AiLogRepository aiLogRepository;
+    @Mock private AiLogService aiLogService;
 
     @InjectMocks private AiService aiService;
 
@@ -43,12 +44,13 @@ class AiServiceTest {
             String result = aiService.generateProductDescription("김치찌개 설명 써줘");
 
             assertThat(result).isEqualTo("맛있는 설명");
-            verify(aiLogRepository)
-                    .save(
-                            argThat(
-                                    log ->
-                                            log.isSuccess()
-                                                    && "맛있는 설명".equals(log.getResponseText())));
+            verify(aiLogService)
+                    .saveLog(
+                            eq(AiRequestType.PRODUCT_DESCRIPTION),
+                            isNull(),
+                            any(),
+                            eq("맛있는 설명"),
+                            eq(true));
         }
 
         @Test
@@ -61,7 +63,7 @@ class AiServiceTest {
                     .extracting(BusinessException::getErrorCode)
                     .isEqualTo(AiErrorCode.AI_PROMPT_TOO_LONG);
 
-            verifyNoInteractions(geminiClient, aiLogRepository);
+            verifyNoInteractions(geminiClient, aiLogService);
         }
 
         @Test
@@ -74,8 +76,13 @@ class AiServiceTest {
                     .extracting(BusinessException::getErrorCode)
                     .isEqualTo(AiErrorCode.AI_GENERATION_FAILED);
 
-            verify(aiLogRepository)
-                    .save(argThat(log -> !log.isSuccess() && log.getResponseText() == null));
+            verify(aiLogService)
+                    .saveLog(
+                            eq(AiRequestType.PRODUCT_DESCRIPTION),
+                            isNull(),
+                            any(),
+                            isNull(),
+                            eq(false));
         }
     }
 }
