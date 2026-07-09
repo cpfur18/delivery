@@ -14,7 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
     private final UserRepository userRepository;
 
-    public User findUser(Long userId) {
+    @Transactional(readOnly = true)
+    public User findActiveUser(Long userId) {
         return userRepository
                 .findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.NOT_EXIST_USER));

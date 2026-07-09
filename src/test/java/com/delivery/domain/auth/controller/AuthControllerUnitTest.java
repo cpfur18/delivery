@@ -188,14 +188,14 @@ class AuthControllerUnitTest {
                                 post("/api/v1/auth/login")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request)))
-                        .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.message").value("아이디를 입력해주세요."));
+                        .andExpect(status().isUnauthorized())
+                        .andExpect(jsonPath("$.message").value("아이디가 존재하지 않거나 비밀번호가 올바르지 않습니다."));
                 mockMvc.perform(
                                 post("/api/v1/auth/login")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request2)))
-                        .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.message").value("비밀번호를 입력해주세요."));
+                        .andExpect(status().isUnauthorized())
+                        .andExpect(jsonPath("$.message").value("아이디가 존재하지 않거나 비밀번호가 올바르지 않습니다."));
             }
         }
     }
