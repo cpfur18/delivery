@@ -23,13 +23,7 @@
 
 # 🗂️ ERD
 
-> ## 🗂️ ERD
-
-## 🗂️ ERD
-
-[📌 ERDCloud에서 보기](https://www.erdcloud.com/d/4mafuLifLa3YGqErN)
-
-<img width="1143" alt="Delivery ERD" src="https://github.com/user-attachments/assets/ERD이미지주소" />
+> 추후 예정
 
 ---
 
