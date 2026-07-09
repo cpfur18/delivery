@@ -1,7 +1,7 @@
 package com.delivery.domain.store.controller;
 
-import com.delivery.domain.store.dto.StoreRequestDto;
-import com.delivery.domain.store.dto.StoreResponseDto;
+import com.delivery.domain.store.dto.request.StoreRequest;
+import com.delivery.domain.store.dto.response.StoreResponse;
 import com.delivery.domain.store.service.StoreService;
 import com.delivery.global.security.config.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -27,10 +27,10 @@ public class StoreController {
     @PreAuthorize("hasRole('OWNER')")
     @PostMapping
     public ResponseEntity<?> createStore(
-            @Valid @RequestBody StoreRequestDto request,
+            @Valid @RequestBody StoreRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        StoreResponseDto response = storeService.createStore(userId, request);
+        StoreResponse response = storeService.createStore(userId, request);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -48,7 +48,7 @@ public class StoreController {
             @RequestParam(required = false) UUID regionId,
             @RequestParam(required = false) String name,
             Pageable pageable) {
-        Page<StoreResponseDto> response = storeService.getStores(categoryId, regionId, name, pageable);
+        Page<StoreResponse> response = storeService.getStores(categoryId, regionId, name, pageable);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -62,7 +62,7 @@ public class StoreController {
 
     @GetMapping("/{storeId}")
     public ResponseEntity<?> getStore(@PathVariable UUID storeId) {
-        StoreResponseDto response = storeService.getStore(storeId);
+        StoreResponse response = storeService.getStore(storeId);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -78,10 +78,10 @@ public class StoreController {
     @PutMapping("/{storeId}")
     public ResponseEntity<?> updateStore(
             @PathVariable UUID storeId,
-            @Valid @RequestBody StoreRequestDto request,
+            @Valid @RequestBody StoreRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        StoreResponseDto response = storeService.updateStore(storeId, userId, request);
+        StoreResponse response = storeService.updateStore(storeId, userId, request);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -100,7 +100,7 @@ public class StoreController {
             @RequestBody Map<String, Boolean> request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        StoreResponseDto response = storeService.updateStoreStatus(storeId, userId, request.get("isOpen"));
+        StoreResponse response = storeService.updateStoreStatus(storeId, userId, request.get("isOpen"));
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);

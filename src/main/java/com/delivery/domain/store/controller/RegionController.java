@@ -1,7 +1,7 @@
 package com.delivery.domain.store.controller;
 
-import com.delivery.domain.store.dto.RegionRequestDto;
-import com.delivery.domain.store.dto.RegionResponseDto;
+import com.delivery.domain.store.dto.request.RegionRequest;
+import com.delivery.domain.store.dto.response.RegionResponse;
 import com.delivery.domain.store.service.RegionService;
 import com.delivery.global.security.config.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import com.delivery.global.security.config.CustomUserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.HashMap;
@@ -26,8 +25,8 @@ public class RegionController {
 
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @PostMapping
-    public ResponseEntity<?> createRegion(@Valid @RequestBody RegionRequestDto request) {
-        RegionResponseDto response = regionService.createRegion(request);
+    public ResponseEntity<?> createRegion(@Valid @RequestBody RegionRequest request) {
+        RegionResponse response = regionService.createRegion(request);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -41,7 +40,7 @@ public class RegionController {
 
     @GetMapping
     public ResponseEntity<?> getRegions() {
-        List<RegionResponseDto> response = regionService.getRegions();
+        List<RegionResponse> response = regionService.getRegions();
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -57,8 +56,8 @@ public class RegionController {
     @PutMapping("/{regionId}")
     public ResponseEntity<?> updateRegion(
             @PathVariable UUID regionId,
-            @Valid @RequestBody RegionRequestDto request) {
-        RegionResponseDto response = regionService.updateRegion(regionId, request);
+            @Valid @RequestBody RegionRequest request) {
+        RegionResponse response = regionService.updateRegion(regionId, request);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);

@@ -1,8 +1,8 @@
 package com.delivery.domain.store.service;
 
 import com.delivery.domain.review.repository.ReviewRepository;
-import com.delivery.domain.store.dto.StoreRequestDto;
-import com.delivery.domain.store.dto.StoreResponseDto;
+import com.delivery.domain.store.dto.request.StoreRequest;
+import com.delivery.domain.store.dto.response.StoreResponse;
 import com.delivery.domain.store.entity.Store;
 import com.delivery.domain.store.repository.CategoryRepository;
 import com.delivery.domain.store.repository.RegionRepository;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -29,73 +28,73 @@ public class StoreService {
 
     // 가게 등록
     @Transactional
-    public StoreResponseDto createStore(Long userId, StoreRequestDto request) {
+    public StoreResponse createStore(Long userId, StoreRequest request) {
 
-        if (storeRepository.existsByUserIdAndNameAndRegionIdAndDeletedAtIsNull(userId, request.getName(), request.getRegionId())) {
+        if (storeRepository.existsByUserIdAndNameAndRegionIdAndDeletedAtIsNull(userId, request.name(), request.regionId())) {
             throw new StoreException(StoreErrorCode.DUPLICATE_STORE);
         }
 
-        categoryRepository.findById(request.getCategoryId())
+        categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
-        regionRepository.findById(request.getRegionId())
+        regionRepository.findById(request.regionId())
                 .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
         Store store = Store.builder()
                 .userId(userId)
-                .categoryId(request.getCategoryId())
-                .regionId(request.getRegionId())
-                .name(request.getName())
-                .address(request.getAddress())
-                .phone(request.getPhone())
-                .description(request.getDescription())
-                .minOrderAmount(request.getMinOrderAmount())
+                .categoryId(request.categoryId())
+                .regionId(request.regionId())
+                .name(request.name())
+                .address(request.address())
+                .phone(request.phone())
+                .description(request.description())
+                .minOrderAmount(request.minOrderAmount())
                 .isOpen(false)
                 .averageRating(0.0)
                 .build();
 
-        return StoreResponseDto.from(storeRepository.save(store));
+        return StoreResponse.from(storeRepository.save(store));
     }
 
     // 가게 목록 조회
     @Transactional(readOnly = true)
-    public Page<StoreResponseDto> getStores(UUID categoryId, UUID regionId, String name, Pageable pageable) {
+    public Page<StoreResponse> getStores(UUID categoryId, UUID regionId, String name, Pageable pageable) {
         return storeRepository.findStores(categoryId, regionId, name, pageable)
-                .map(StoreResponseDto::from);
+                .map(StoreResponse::from);
     }
 
     // 가게 단건 조회
     @Transactional(readOnly = true)
-    public StoreResponseDto getStore(UUID storeId) {
+    public StoreResponse getStore(UUID storeId) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
-        return StoreResponseDto.from(store);
+        return StoreResponse.from(store);
     }
 
     // 가게 수정
     @Transactional
-    public StoreResponseDto updateStore(UUID storeId, Long userId, StoreRequestDto request) {
+    public StoreResponse updateStore(UUID storeId, Long userId, StoreRequest request) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
-        categoryRepository.findById(request.getCategoryId())
+        categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
-        regionRepository.findById(request.getRegionId())
+        regionRepository.findById(request.regionId())
                 .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
         store.update(request);
-        return StoreResponseDto.from(store);
+        return StoreResponse.from(store);
     }
 
     // 영업상태 변경
     @Transactional
-    public StoreResponseDto updateStoreStatus(UUID storeId, Long userId, Boolean isOpen) {
+    public StoreResponse updateStoreStatus(UUID storeId, Long userId, Boolean isOpen) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
         store.updateStatus(isOpen);
-        return StoreResponseDto.from(store);
+        return StoreResponse.from(store);
     }
 
     // 가게 삭제 (Soft Delete)

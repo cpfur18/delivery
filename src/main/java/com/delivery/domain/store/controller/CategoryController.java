@@ -1,7 +1,7 @@
 package com.delivery.domain.store.controller;
 
-import com.delivery.domain.store.dto.CategoryRequestDto;
-import com.delivery.domain.store.dto.CategoryResponseDto;
+import com.delivery.domain.store.dto.request.CategoryRequest;
+import com.delivery.domain.store.dto.response.CategoryResponse;
 import com.delivery.domain.store.service.CategoryService;
 import com.delivery.global.security.config.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import com.delivery.global.security.config.CustomUserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.HashMap;
@@ -26,8 +25,8 @@ public class CategoryController {
 
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @PostMapping
-    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequestDto request) {
-        CategoryResponseDto response = categoryService.createCategory(request);
+    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequest request) {
+        CategoryResponse response = categoryService.createCategory(request);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -41,7 +40,7 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<?> getCategories() {
-        List<CategoryResponseDto> response = categoryService.getCategories();
+        List<CategoryResponse> response = categoryService.getCategories();
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -57,8 +56,8 @@ public class CategoryController {
     @PutMapping("/{categoryId}")
     public ResponseEntity<?> updateCategory(
             @PathVariable UUID categoryId,
-            @Valid @RequestBody CategoryRequestDto request) {
-        CategoryResponseDto response = categoryService.updateCategory(categoryId, request);
+            @Valid @RequestBody CategoryRequest request) {
+        CategoryResponse response = categoryService.updateCategory(categoryId, request);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);

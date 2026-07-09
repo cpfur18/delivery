@@ -1,7 +1,7 @@
 package com.delivery.domain.store.service;
 
-import com.delivery.domain.store.dto.RegionRequestDto;
-import com.delivery.domain.store.dto.RegionResponseDto;
+import com.delivery.domain.store.dto.request.RegionRequest;
+import com.delivery.domain.store.dto.response.RegionResponse;
 import com.delivery.domain.store.entity.Region;
 import com.delivery.domain.store.repository.RegionRepository;
 import com.delivery.global.exception.StoreErrorCode;
@@ -21,35 +21,35 @@ public class RegionService {
     private final RegionRepository regionRepository;
 
     @Transactional
-    public RegionResponseDto createRegion(RegionRequestDto request) {
-        if (regionRepository.existsByName(request.getName())) {
+    public RegionResponse createRegion(RegionRequest request) {
+        if (regionRepository.existsByName(request.name())) {
             throw new StoreException(StoreErrorCode.DUPLICATE_REGION);
         }
 
         Region region = Region.builder()
-                .name(request.getName())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
+                .name(request.name())
+                .latitude(request.latitude())
+                .longitude(request.longitude())
                 .build();
 
-        return RegionResponseDto.from(regionRepository.save(region));
+        return RegionResponse.from(regionRepository.save(region));
     }
 
     @Transactional(readOnly = true)
-    public List<RegionResponseDto> getRegions() {
+    public List<RegionResponse> getRegions() {
         return regionRepository.findAllByDeletedAtIsNull()
                 .stream()
-                .map(RegionResponseDto::from)
+                .map(RegionResponse::from)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public RegionResponseDto updateRegion(UUID regionId, RegionRequestDto request) {
+    public RegionResponse updateRegion(UUID regionId, RegionRequest request) {
         Region region = regionRepository.findByRegionIdAndDeletedAtIsNull(regionId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
-        region.update(request.getName(), request.getLatitude(), request.getLongitude());
-        return RegionResponseDto.from(region);
+        region.update(request.name(), request.latitude(), request.longitude());
+        return RegionResponse.from(region);
     }
 
     @Transactional
