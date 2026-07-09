@@ -1,7 +1,7 @@
 package com.delivery.global.exception;
 
 import com.delivery.common.RestApiResponse;
-import com.delivery.domain.auth.dto.LoginRequestDto;
+import com.delivery.domain.auth.dto.request.LoginRequest;
 import com.delivery.domain.auth.exception.AuthErrorCode;
 import com.delivery.domain.user.exception.UserErrorCode;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = GlobalErrorCode.BAD_REQUEST;
 
         // 로그인 Dto
-        if (target instanceof LoginRequestDto) {
+        if (target instanceof LoginRequest) {
             errorCode = AuthErrorCode.INVALID_LOGIN;
         } else if (fieldError != null) {
             errorCode =

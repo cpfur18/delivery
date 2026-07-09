@@ -1,9 +1,9 @@
 package com.delivery.domain.auth.controller;
 
 import com.delivery.common.RestApiResponse;
-import com.delivery.domain.auth.dto.AuthResponseDto;
-import com.delivery.domain.auth.dto.LoginRequestDto;
-import com.delivery.domain.auth.dto.SignUpRequestDto;
+import com.delivery.domain.auth.dto.request.LoginRequest;
+import com.delivery.domain.auth.dto.request.SignUpRequest;
+import com.delivery.domain.auth.dto.response.AuthResponse;
 import com.delivery.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +21,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping
-    public ResponseEntity<RestApiResponse<AuthResponseDto>> signUp(
-            @Valid @RequestBody SignUpRequestDto request) {
+    public ResponseEntity<RestApiResponse<AuthResponse>> signUp(
+            @Valid @RequestBody SignUpRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         RestApiResponse.success(
@@ -30,8 +30,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<RestApiResponse<AuthResponseDto>> login(
-            @Valid @RequestBody LoginRequestDto request) {
+    public ResponseEntity<RestApiResponse<AuthResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(
                 RestApiResponse.success(HttpStatus.OK, "로그인 성공", authService.login(request)));
     }

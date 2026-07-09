@@ -4,22 +4,17 @@ import org.junit.jupiter.api.Test;
 
 public class AddressServiceIntegrationTest {
     @Test
-    void createAddress() {
-    }
+    void createAddress() {}
 
     @Test
-    void findAddresses() {
-    }
+    void findAddresses() {}
 
     @Test
-    void findAddress() {
-    }
+    void findAddress() {}
 
     @Test
-    void updateAddress() {
-    }
+    void updateAddress() {}
 
     @Test
-    void deleteAddress() {
-    }
+    void deleteAddress() {}
 }

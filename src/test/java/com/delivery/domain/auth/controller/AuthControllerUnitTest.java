@@ -6,9 +6,9 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.delivery.domain.auth.dto.AuthResponseDto;
-import com.delivery.domain.auth.dto.LoginRequestDto;
-import com.delivery.domain.auth.dto.SignUpRequestDto;
+import com.delivery.domain.auth.dto.request.LoginRequest;
+import com.delivery.domain.auth.dto.request.SignUpRequest;
+import com.delivery.domain.auth.dto.response.AuthResponse;
 import com.delivery.domain.auth.service.AuthService;
 import com.delivery.domain.user.enums.Role;
 import com.delivery.global.security.jwt.JwtUtil;
@@ -45,24 +45,13 @@ class AuthControllerUnitTest {
         @DisplayName("회원가입 성공")
         void signUp_success() throws Exception {
             // given
-            SignUpRequestDto request =
-                    SignUpRequestDto.builder()
-                            .username("test1234")
-                            .password("Testtest123!")
-                            .nickName("test")
-                            .phoneNumber("01012345678")
-                            .role(Role.CUSTOMER)
-                            .build();
+            SignUpRequest request =
+                    new SignUpRequest(
+                            "test1234", "Testtest123!", "test", "01012345678", Role.CUSTOMER);
 
-            AuthResponseDto response =
-                    AuthResponseDto.builder()
-                            .id(1L)
-                            .username("test1234")
-                            .nickName("test")
-                            .accessToken("accessToken")
-                            .build();
+            AuthResponse response = new AuthResponse(1L, "test1234", "test", "accessToken");
 
-            given(authService.signUp((any(SignUpRequestDto.class)))).willReturn(response);
+            given(authService.signUp((any(SignUpRequest.class)))).willReturn(response);
 
             // when & then
             mockMvc.perform(
@@ -76,13 +65,13 @@ class AuthControllerUnitTest {
                     .andExpect(jsonPath("$.data.nickName").value("test"))
                     .andExpect(jsonPath("$.data.accessToken").value("accessToken"));
 
-            verify(authService).signUp(any(SignUpRequestDto.class));
+            verify(authService).signUp(any(SignUpRequest.class));
         }
 
         @DisplayName("회원가입 시 유효성 체크를 통과하지 못하면 예외가 발생해야한다.")
         @ParameterizedTest
         @MethodSource("testCase")
-        void signUp_fail_when_invalid(SignUpRequestDto request) throws Exception {
+        void signUp_fail_when_invalid(SignUpRequest request) throws Exception {
             // when & then
             mockMvc.perform(
                             post("/api/v1/auth")
@@ -91,43 +80,24 @@ class AuthControllerUnitTest {
                     .andExpect(status().isBadRequest());
         }
 
-        static Stream<SignUpRequestDto> testCase() {
+        static Stream<SignUpRequest> testCase() {
             return Stream.of(
                     // 아이디 유효성 검사 실패
-                    SignUpRequestDto.builder()
-                            .username("아이디")
-                            .password("Testtest123!")
-                            .nickName("test")
-                            .phoneNumber("01012345678")
-                            .role(Role.CUSTOMER)
-                            .build(),
+                    new SignUpRequest("아이디", "Testtest123!", "test", "01012345678", Role.CUSTOMER),
 
                     // 비밀번호 유효성 검사 실패
-                    SignUpRequestDto.builder()
-                            .username("test1234")
-                            .password("비밀번호")
-                            .nickName("test")
-                            .phoneNumber("01012345678")
-                            .role(Role.CUSTOMER)
-                            .build(),
+                    new SignUpRequest("test1234", "비밀번호", "test", "01012345678", Role.CUSTOMER),
 
                     // 닉네임 유효성 검사 실패
-                    SignUpRequestDto.builder()
-                            .username("test1234")
-                            .password("Testtest123!")
-                            .nickName("테스트테스트테스트테스트테스트테스트")
-                            .phoneNumber("01012345678")
-                            .role(Role.CUSTOMER)
-                            .build(),
+                    new SignUpRequest(
+                            "test1234",
+                            "Testtest123!",
+                            "테스트테스트테스트테스트테스트테스트",
+                            "01012345678",
+                            Role.CUSTOMER),
 
                     // 전화번호 유효성 검사 실패
-                    SignUpRequestDto.builder()
-                            .username("test1234")
-                            .password("Testtest123!")
-                            .nickName("test")
-                            .phoneNumber("연락처")
-                            .role(Role.CUSTOMER)
-                            .build());
+                    new SignUpRequest("test1234", "Testtest123!", "test", "연락처", Role.CUSTOMER));
         }
 
         @Nested
@@ -137,21 +107,11 @@ class AuthControllerUnitTest {
             @DisplayName("로그인 성공")
             void login_success() throws Exception {
                 // given
-                LoginRequestDto request =
-                        LoginRequestDto.builder()
-                                .username("test1234")
-                                .password("Testtest123!")
-                                .build();
+                LoginRequest request = new LoginRequest("test1234", "Testtest123!");
 
-                AuthResponseDto response =
-                        AuthResponseDto.builder()
-                                .id(1L)
-                                .username("test1234")
-                                .nickName("test")
-                                .accessToken("accessToken")
-                                .build();
+                AuthResponse response = new AuthResponse(1L, "test1234", "test", "accessToken");
 
-                given(authService.login(any(LoginRequestDto.class))).willReturn(response);
+                given(authService.login(any(LoginRequest.class))).willReturn(response);
 
                 // when & then
                 mockMvc.perform(
@@ -165,18 +125,16 @@ class AuthControllerUnitTest {
                         .andExpect(jsonPath("$.data.nickName").value("test"))
                         .andExpect(jsonPath("$.data.accessToken").value("accessToken"));
 
-                verify(authService).login(any(LoginRequestDto.class));
+                verify(authService).login(any(LoginRequest.class));
             }
 
             @Test
             @DisplayName("로그인 시 아이디 또는 비밀번호 입력을 안하면 예외가 발생해야한다.")
             void login_fail_when_invalid() throws Exception {
                 // given
-                LoginRequestDto request =
-                        LoginRequestDto.builder().username("").password("Testtext123!").build();
+                LoginRequest request = new LoginRequest("", "Testtext123!");
 
-                LoginRequestDto request2 =
-                        LoginRequestDto.builder().username("test1234").password("").build();
+                LoginRequest request2 = new LoginRequest("test1234", "");
 
                 // when & then
                 mockMvc.perform(

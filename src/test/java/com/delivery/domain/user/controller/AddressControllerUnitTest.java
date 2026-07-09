@@ -1,28 +1,23 @@
 package com.delivery.domain.user.controller;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 class AddressControllerUnitTest {
 
     @Test
-    void createAddress() {
-    }
+    void createAddress() {}
 
     @Test
-    void getAddressList() {
-    }
+    void getAddressList() {}
 
     @Test
-    void getAddress() {
-    }
+    void getAddress() {}
 
     @Test
-    void updateAddress() {
-    }
+    void updateAddress() {}
 
     @Test
-    void deleteAddress() {
-    }
+    void deleteAddress() {}
 }

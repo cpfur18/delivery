@@ -1,8 +1,8 @@
 package com.delivery.domain.user.service;
 
-import com.delivery.domain.user.dto.AddressResponseDto;
-import com.delivery.domain.user.dto.CreateAddressRequest;
-import com.delivery.domain.user.dto.UpdateAddressRequestDto;
+import com.delivery.domain.user.dto.request.CreateAddressRequest;
+import com.delivery.domain.user.dto.request.UpdateAddressRequest;
+import com.delivery.domain.user.dto.response.AddressResponse;
 import com.delivery.domain.user.entity.Address;
 import com.delivery.domain.user.entity.User;
 import com.delivery.domain.user.exception.UserErrorCode;
@@ -23,12 +23,12 @@ public class AddressService {
     private final UserService userService;
 
     // TODO : 테스트 시 삭제 배송지 확인해봐야함, 동시성 문제 생길 확률 높음
-    public AddressResponseDto createAddress(Long userId, CreateAddressRequest request) {
+    public AddressResponse createAddress(Long userId, CreateAddressRequest request) {
         if (addressRepository.countByUserIdAndDeletedAtIsNull(userId) >= 10) {
             throw new UserException(UserErrorCode.EXCEED_MAX_ADDRESS);
         }
 
-        if (request.getIsDefault()) {
+        if (request.isDefault()) {
             resetDefault(userId);
         }
 
@@ -36,22 +36,19 @@ public class AddressService {
 
         Address address =
                 Address.create(
-                        user,
-                        request.getAddress(),
-                        request.getAddressDetail(),
-                        request.getIsDefault());
+                        user, request.address(), request.addressDetail(), request.isDefault());
         return UserDtoMapper.toDto(addressRepository.save(address));
     }
 
     @Transactional(readOnly = true)
-    public List<AddressResponseDto> findAddresses(Long userId) {
+    public List<AddressResponse> findAddresses(Long userId) {
         return addressRepository.findAllByUserIdAndDeletedAtIsNull(userId).stream()
                 .map(UserDtoMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public AddressResponseDto findAddress(Long userId, UUID addressId) {
+    public AddressResponse findAddress(Long userId, UUID addressId) {
         return UserDtoMapper.toDto(
                 addressRepository
                         .findByIdAndUserIdAndDeletedAtIsNull(addressId, userId)
@@ -59,9 +56,9 @@ public class AddressService {
     }
 
     @Transactional
-    public AddressResponseDto updateAddress(
-            Long userId, UUID addressId, UpdateAddressRequestDto request) {
-        if (request.getIsDefault()) {
+    public AddressResponse updateAddress(
+            Long userId, UUID addressId, UpdateAddressRequest request) {
+        if (request.isDefault()) {
             resetDefault(userId);
         }
 
@@ -69,7 +66,7 @@ public class AddressService {
                 addressRepository
                         .findByIdAndUserIdAndDeletedAtIsNull(addressId, userId)
                         .orElseThrow(() -> new UserException(UserErrorCode.NOT_EXIST_ADDRESS));
-        address.update(request.getAddress(), request.getAddressDetail(), request.getIsDefault());
+        address.update(request.address(), request.addressDetail(), request.isDefault());
 
         return UserDtoMapper.toDto(address);
     }

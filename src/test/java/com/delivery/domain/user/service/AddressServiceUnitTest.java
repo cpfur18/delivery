@@ -1,28 +1,23 @@
 package com.delivery.domain.user.service;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 class AddressServiceUnitTest {
 
     @Test
-    void createAddress() {
-    }
+    void createAddress() {}
 
     @Test
-    void findAddresses() {
-    }
+    void findAddresses() {}
 
     @Test
-    void findAddress() {
-    }
+    void findAddress() {}
 
     @Test
-    void updateAddress() {
-    }
+    void updateAddress() {}
 
     @Test
-    void deleteAddress() {
-    }
+    void deleteAddress() {}
 }
