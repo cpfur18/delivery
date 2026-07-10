@@ -54,6 +54,22 @@ class MenuControllerTest {
     // JwtRequestFilter는 JwtUtil에 의존해 실제 컨텍스트 로딩이 실패한다. 모킹으로 우회.
     @MockitoBean private JwtRequestFilter jwtRequestFilter;
 
+    // @AuthenticationPrincipal은 SecurityContextHolder를 직접 읽으므로(필터 체인과 무관),
+    // addFilters=false 슬라이스에서도 이렇게 수동으로 세팅해야 principal이 주입된다.
+    private void setAuthenticatedPrincipal(Long id, String username, String roleAuthority) {
+        List<SimpleGrantedAuthority> authorities =
+                List.of(new SimpleGrantedAuthority(roleAuthority));
+        CustomUserDetails principal =
+                CustomUserDetails.builder()
+                        .id(id)
+                        .username(username)
+                        .authorities(authorities)
+                        .build();
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(principal, null, authorities));
+    }
+
     @Nested
     @DisplayName("메뉴 생성")
     class CreateMenu {
@@ -61,29 +77,37 @@ class MenuControllerTest {
         @Test
         @DisplayName("생성에 성공하면 201과 생성된 메뉴를 반환한다")
         void createMenu_returns201() throws Exception {
-            MenuResponse response = MenuResponse.from(new MenuEntity(STORE_ID, "김치찌개", "설명", 8000));
-            given(
-                            menuService.createMenu(
-                                    eq(STORE_ID),
-                                    eq("김치찌개"),
-                                    eq("설명"),
-                                    eq(8000),
-                                    eq(false),
-                                    isNull()))
-                    .willReturn(response);
+            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            try {
+                MenuResponse response =
+                        MenuResponse.from(new MenuEntity(STORE_ID, "김치찌개", "설명", 8000));
+                given(
+                                menuService.createMenu(
+                                        eq(STORE_ID),
+                                        eq("김치찌개"),
+                                        eq("설명"),
+                                        eq(8000),
+                                        eq(false),
+                                        isNull(),
+                                        eq(1L),
+                                        eq(false)))
+                        .willReturn(response);
 
-            CreateMenuRequest request = new CreateMenuRequest("김치찌개", "설명", 8000, false, null);
+                CreateMenuRequest request = new CreateMenuRequest("김치찌개", "설명", 8000, false, null);
 
-            mockMvc.perform(
-                            post("/api/v1/stores/{storeId}/menus", STORE_ID)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.code").value(201))
-                    .andExpect(jsonPath("$.data.name").value("김치찌개"))
-                    .andExpect(jsonPath("$.data.price").value(8000))
-                    .andExpect(jsonPath("$.data.hidden").value(false));
+                mockMvc.perform(
+                                post("/api/v1/stores/{storeId}/menus", STORE_ID)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.success").value(true))
+                        .andExpect(jsonPath("$.code").value(201))
+                        .andExpect(jsonPath("$.data.name").value("김치찌개"))
+                        .andExpect(jsonPath("$.data.price").value(8000))
+                        .andExpect(jsonPath("$.data.hidden").value(false));
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         @Test
@@ -112,6 +136,36 @@ class MenuControllerTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.error").value("INVALID_MENU_PRICE"));
+        }
+
+        @Test
+        @DisplayName("가게 소유자가 아니면 403과 NOT_MENU_STORE_OWNER 에러를 반환한다")
+        void createMenu_returns403_whenNotStoreOwner() throws Exception {
+            setAuthenticatedPrincipal(2L, "other", "ROLE_OWNER");
+            try {
+                given(
+                                menuService.createMenu(
+                                        eq(STORE_ID),
+                                        eq("김치찌개"),
+                                        eq("설명"),
+                                        eq(8000),
+                                        eq(false),
+                                        isNull(),
+                                        eq(2L),
+                                        eq(false)))
+                        .willThrow(new MenuException(MenuErrorCode.NOT_MENU_STORE_OWNER));
+
+                CreateMenuRequest request = new CreateMenuRequest("김치찌개", "설명", 8000, false, null);
+
+                mockMvc.perform(
+                                post("/api/v1/stores/{storeId}/menus", STORE_ID)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isForbidden())
+                        .andExpect(jsonPath("$.error").value("NOT_MENU_STORE_OWNER"));
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
     }
 
@@ -173,21 +227,33 @@ class MenuControllerTest {
         @Test
         @DisplayName("수정에 성공하면 200과 수정된 메뉴를 반환한다")
         void updateMenu_returns200() throws Exception {
-            UUID menuId = UUID.randomUUID();
-            MenuResponse response =
-                    MenuResponse.from(new MenuEntity(STORE_ID, "된장찌개", "새 설명", 9000));
-            given(menuService.updateMenu(eq(menuId), eq("된장찌개"), eq("새 설명"), eq(9000)))
-                    .willReturn(response);
+            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            try {
+                UUID menuId = UUID.randomUUID();
+                MenuResponse response =
+                        MenuResponse.from(new MenuEntity(STORE_ID, "된장찌개", "새 설명", 9000));
+                given(
+                                menuService.updateMenu(
+                                        eq(menuId),
+                                        eq("된장찌개"),
+                                        eq("새 설명"),
+                                        eq(9000),
+                                        eq(1L),
+                                        eq(false)))
+                        .willReturn(response);
 
-            UpdateMenuRequest request = new UpdateMenuRequest("된장찌개", "새 설명", 9000);
+                UpdateMenuRequest request = new UpdateMenuRequest("된장찌개", "새 설명", 9000);
 
-            mockMvc.perform(
-                            patch("/api/v1/menus/{menuId}", menuId)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.name").value("된장찌개"))
-                    .andExpect(jsonPath("$.data.price").value(9000));
+                mockMvc.perform(
+                                patch("/api/v1/menus/{menuId}", menuId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.name").value("된장찌개"))
+                        .andExpect(jsonPath("$.data.price").value(9000));
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         @Test
@@ -226,19 +292,25 @@ class MenuControllerTest {
         @Test
         @DisplayName("변경에 성공하면 200과 변경된 메뉴를 반환한다")
         void updateVisibility_returns200() throws Exception {
-            UUID menuId = UUID.randomUUID();
-            MenuEntity menu = new MenuEntity(STORE_ID, "김치찌개", "설명", 8000);
-            menu.updateHidden(true);
-            given(menuService.updateVisibility(menuId, true)).willReturn(MenuResponse.from(menu));
+            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            try {
+                UUID menuId = UUID.randomUUID();
+                MenuEntity menu = new MenuEntity(STORE_ID, "김치찌개", "설명", 8000);
+                menu.updateHidden(true);
+                given(menuService.updateVisibility(menuId, true, 1L, false))
+                        .willReturn(MenuResponse.from(menu));
 
-            UpdateMenuVisibilityRequest request = new UpdateMenuVisibilityRequest(true);
+                UpdateMenuVisibilityRequest request = new UpdateMenuVisibilityRequest(true);
 
-            mockMvc.perform(
-                            patch("/api/v1/menus/{menuId}/visibility", menuId)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.hidden").value(true));
+                mockMvc.perform(
+                                patch("/api/v1/menus/{menuId}/visibility", menuId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.hidden").value(true));
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         @Test
@@ -264,23 +336,28 @@ class MenuControllerTest {
         void deleteMenu_returns200WithNullData() throws Exception {
             UUID menuId = UUID.randomUUID();
 
-            List<SimpleGrantedAuthority> authorities =
-                    List.of(new SimpleGrantedAuthority("ROLE_OWNER"));
-            CustomUserDetails principal =
-                    CustomUserDetails.builder()
-                            .id(1L)
-                            .username("owner1")
-                            .authorities(authorities)
-                            .build();
-            SecurityContextHolder.getContext()
-                    .setAuthentication(
-                            new UsernamePasswordAuthenticationToken(principal, null, authorities));
+            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
             try {
                 mockMvc.perform(delete("/api/v1/menus/{menuId}", menuId))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.data").value(nullValue()));
-                verify(menuService).deleteMenu(eq(menuId), eq("1_owner1"));
+                verify(menuService).deleteMenu(eq(menuId), eq("1_owner1"), eq(1L), eq(false));
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
+        }
+
+        @Test
+        @DisplayName("MANAGER는 소유자가 아니어도 삭제할 수 있다(우회)")
+        void deleteMenu_bypassesOwnership_forManager() throws Exception {
+            UUID menuId = UUID.randomUUID();
+
+            setAuthenticatedPrincipal(9L, "manager1", "ROLE_MANAGER");
+            try {
+                mockMvc.perform(delete("/api/v1/menus/{menuId}", menuId))
+                        .andExpect(status().isOk());
+                verify(menuService).deleteMenu(eq(menuId), eq("9_manager1"), eq(9L), eq(true));
             } finally {
                 SecurityContextHolder.clearContext();
             }

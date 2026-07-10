@@ -9,6 +9,8 @@ import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.menu.exception.MenuException;
 import com.delivery.domain.menu.repository.MenuRepository;
+import com.delivery.domain.store.entity.Store;
+import com.delivery.domain.store.repository.StoreRepository;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class MenuService {
 
     private final MenuRepository menuRepository;
+    private final StoreRepository storeRepository;
     private final AiService aiService;
     private final TransactionTemplate transactionTemplate;
 
@@ -37,7 +40,11 @@ public class MenuService {
             String description,
             int price,
             boolean aiGeneration,
-            String aiPrompt) {
+            String aiPrompt,
+            Long requesterId,
+            boolean bypassOwnership) {
+        // AI 호출(비용/시간이 드는 작업) 전에 먼저 검증해 불필요한 Gemini 호출을 막음
+        validateStoreOwnership(storeId, requesterId, bypassOwnership);
         validateMenu(name, price);
 
         String finalDescription = description;
@@ -77,26 +84,37 @@ public class MenuService {
 
     // 메뉴 수정
     @Transactional
-    public MenuResponse updateMenu(UUID menuId, String name, String description, int price) {
+    public MenuResponse updateMenu(
+            UUID menuId,
+            String name,
+            String description,
+            int price,
+            Long requesterId,
+            boolean bypassOwnership) {
         validateMenu(name, price);
 
         MenuEntity menu = findMenu(menuId);
+        validateStoreOwnership(menu.getStoreId(), requesterId, bypassOwnership);
         menu.update(name, description, price);
         return MenuResponse.from(menu);
     }
 
     // 숨김 상태 업데이트
     @Transactional
-    public MenuResponse updateVisibility(UUID menuId, boolean hidden) {
+    public MenuResponse updateVisibility(
+            UUID menuId, boolean hidden, Long requesterId, boolean bypassOwnership) {
         MenuEntity menu = findMenu(menuId);
+        validateStoreOwnership(menu.getStoreId(), requesterId, bypassOwnership);
         menu.updateHidden(hidden);
         return MenuResponse.from(menu);
     }
 
     // 메뉴 삭제 (Soft Delete)
     @Transactional
-    public void deleteMenu(UUID menuId, String deletedBy) {
+    public void deleteMenu(
+            UUID menuId, String deletedBy, Long requesterId, boolean bypassOwnership) {
         MenuEntity menu = findMenu(menuId);
+        validateStoreOwnership(menu.getStoreId(), requesterId, bypassOwnership);
         menu.delete(deletedBy);
     }
 
@@ -124,6 +142,21 @@ public class MenuService {
         }
         if (price <= 0) {
             throw new MenuException(MenuErrorCode.INVALID_MENU_PRICE);
+        }
+    }
+
+    // Store 소유권(2차) 검증 - StoreService를 거치지 않고 StoreRepository를 직접 조회함.
+    // StoreService 자신도 CategoryRepository/RegionRepository를 직접 조회하는 방식이라
+    // 같은 관례를 따름. bypassOwnership=true(MANAGER/MASTER)면 소유자 일치 여부는 스킵하되,
+    // 가게 자체가 존재하는지는 항상 확인함.
+    private void validateStoreOwnership(UUID storeId, Long requesterId, boolean bypassOwnership) {
+        Store store =
+                storeRepository
+                        .findByStoreIdAndDeletedAtIsNull(storeId)
+                        .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_STORE_NOT_FOUND));
+
+        if (!bypassOwnership && !store.getUserId().equals(requesterId)) {
+            throw new MenuException(MenuErrorCode.NOT_MENU_STORE_OWNER);
         }
     }
 }
