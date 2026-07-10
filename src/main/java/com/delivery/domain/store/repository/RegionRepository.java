@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RegionRepository extends JpaRepository<Region, UUID> {
-    boolean existsByName(String name);
+    boolean existsByNameAndDeletedAtIsNull(String name);
     List<Region> findAllByDeletedAtIsNull();
     Optional<Region> findByRegionIdAndDeletedAtIsNull(UUID regionId);
 }

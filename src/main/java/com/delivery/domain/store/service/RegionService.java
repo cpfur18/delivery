@@ -23,7 +23,7 @@ public class RegionService {
 
     @Transactional
     public RegionResponse createRegion(RegionRequest request) {
-        if (regionRepository.existsByName(request.name())) {
+        if (regionRepository.existsByNameAndDeletedAtIsNull(request.name())) {
             throw new StoreException(StoreErrorCode.DUPLICATE_REGION);
         }
 
