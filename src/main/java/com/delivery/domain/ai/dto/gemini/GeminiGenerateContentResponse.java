@@ -20,7 +20,21 @@ public record GeminiGenerateContentResponse(List<Candidate> candidates) {
     // candidates[0].content.parts[0].text 를 한 번에 꺼내주는 헬퍼.
     // 이 메서드 덕분에 GeminiClient는 JSON이 몇 겹으로 감싸져 있는지 몰라도 됨.
     // record의 필드 접근자는 getXxx()가 아니라 필드명 그대로 메서드(candidates())로 생성됨.
+    //
+    // candidates/parts가 비어있을 수 있음 - 세이프티 필터 등으로 응답이 차단되면 Gemini가
+    // candidates: [] 를 반환함. 이걸 그냥 get(0)하면 IndexOutOfBoundsException/NPE가 나서
+    // RestClientException만 잡는 AiService의 실패 처리를 비껴가므로, 명시적인 예외로 변환함.
     public String firstText() {
-        return candidates().get(0).content().parts().get(0).text();
+        if (candidates == null || candidates.isEmpty()) {
+            throw new GeminiResponseException(
+                    "Gemini 응답에 candidates가 없습니다 (세이프티 필터 등으로 차단됐을 수 있음)");
+        }
+
+        Content content = candidates.get(0).content();
+        if (content == null || content.parts() == null || content.parts().isEmpty()) {
+            throw new GeminiResponseException("Gemini 응답에 text 파트가 없습니다");
+        }
+
+        return content.parts().get(0).text();
     }
 }
