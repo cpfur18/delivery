@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RegionService {
 
     private final RegionRepository regionRepository;
@@ -35,7 +36,6 @@ public class RegionService {
         return RegionResponse.from(regionRepository.save(region));
     }
 
-    @Transactional(readOnly = true)
     public List<RegionResponse> getRegions() {
         return regionRepository.findAllByDeletedAtIsNull()
                 .stream()

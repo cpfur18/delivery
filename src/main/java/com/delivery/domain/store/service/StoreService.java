@@ -19,6 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class StoreService {
 
     private final StoreRepository storeRepository;
@@ -57,14 +58,12 @@ public class StoreService {
     }
 
     // 가게 목록 조회
-    @Transactional(readOnly = true)
     public Page<StoreResponse> getStores(UUID categoryId, UUID regionId, String name, Pageable pageable) {
         return storeRepository.findStores(categoryId, regionId, name, pageable)
                 .map(StoreResponse::from);
     }
 
     // 가게 단건 조회
-    @Transactional(readOnly = true)
     public StoreResponse getStore(UUID storeId) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));

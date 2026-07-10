@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
@@ -33,7 +34,6 @@ public class CategoryService {
         return CategoryResponse.from(categoryRepository.save(category));
     }
 
-    @Transactional(readOnly = true)
     public List<CategoryResponse> getCategories() {
         return categoryRepository.findAllByDeletedAtIsNull()
                 .stream()
