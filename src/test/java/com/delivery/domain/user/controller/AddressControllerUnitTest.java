@@ -105,10 +105,11 @@ class AddressControllerUnitTest {
         @Test
         @DisplayName("배송지 조회 성공 시 200과 배송지 정보를 반환한다..")
         void getAddress_success() throws Exception {
+            // given
             AddressResponse response = new AddressResponse(addressId, "주소1", "상세주소1", true);
-
             given(addressService.findAddress(eq(1L), eq(addressId))).willReturn(response);
 
+            // when & then
             mockMvc.perform(
                             get("/api/v1/users/me/addresses/{addressId}", addressId)
                                     .contentType(MediaType.APPLICATION_JSON))
@@ -123,6 +124,7 @@ class AddressControllerUnitTest {
         @Test
         @DisplayName("배송지 조회 시 배송지가 없으면 NOT_EXIST_ADDRESS(404) 에러를 반환한다.")
         void getAddress_fail_whenNotExistAddress() throws Exception {
+            // given
             given(addressService.findAddress(eq(1L), eq(addressId)))
                     .willThrow(new UserException(UserErrorCode.NOT_EXIST_ADDRESS));
 
@@ -138,6 +140,7 @@ class AddressControllerUnitTest {
         @Test
         @DisplayName("배송지 목록 조회 시 200과 배송지 LIST를 반환한다.")
         void getAddressList_success() throws Exception {
+            // given
             List<AddressResponse> responsesList =
                     List.of(
                             new AddressResponse(UUID.randomUUID(), "주소1", "상세주소1", false),
@@ -145,6 +148,7 @@ class AddressControllerUnitTest {
 
             given(addressService.findAddresses(eq(1L))).willReturn(responsesList);
 
+            // when & then
             mockMvc.perform(
                             get("/api/v1/users/me/addresses")
                                     .contentType(MediaType.APPLICATION_JSON))
