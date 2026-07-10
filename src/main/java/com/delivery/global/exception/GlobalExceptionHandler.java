@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -57,5 +58,20 @@ public class GlobalExceptionHandler {
                 .body(
                         RestApiResponse.fail(
                                 errorCode.getHttpStatus(), errorMessage, errorCode.getName()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<RestApiResponse<?>> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException e) {
+        ErrorCode errorCode = GlobalErrorCode.BAD_REQUEST;
+
+        log.error("{} : {}", errorCode.getName(), e.getMessage(), e);
+
+        return ResponseEntity.status(errorCode.getHttpStatus())
+                .body(
+                        RestApiResponse.fail(
+                                errorCode.getHttpStatus(),
+                                errorCode.getMessage(),
+                                errorCode.getName()));
     }
 }

@@ -22,6 +22,7 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
                     from p_payment p
                     join p_order o on p.order_id = o.id
                     where o.store_id = :storeId
+                    order by p.paid_at desc
                     """,
             countQuery =
                     """
@@ -41,6 +42,7 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
                     join p_order o on p.order_id = o.id
                     where o.store_id = :storeId
                       and p.payment_status = cast(:paymentStatus as varchar)
+                    order by p.paid_at desc
                     """,
             countQuery =
                     """

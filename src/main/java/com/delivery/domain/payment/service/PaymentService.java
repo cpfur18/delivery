@@ -54,7 +54,8 @@ public class PaymentService {
             UUID storeId, int page, int size, PaymentStatus status) {
         validatePageRequest(page, size);
 
-        Pageable pageable = createPageable(page, size);
+        // TODO: Add store-owner ownership verification when Store to Owner mapping is available.
+        Pageable pageable = createUnsortedPageable(page, size);
         Page<PaymentResponse> payments =
                 (status == null
                                 ? paymentRepository.findByStoreId(storeId, pageable)
@@ -90,6 +91,10 @@ public class PaymentService {
 
     private Pageable createPageable(int page, int size) {
         return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "paidAt"));
+    }
+
+    private Pageable createUnsortedPageable(int page, int size) {
+        return PageRequest.of(page, size);
     }
 
     private void validatePageRequest(int page, int size) {

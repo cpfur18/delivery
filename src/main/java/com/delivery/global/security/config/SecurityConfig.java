@@ -1,6 +1,7 @@
 package com.delivery.global.security.config;
 
 import com.delivery.global.security.jwt.JwtAuthenticationEntryPoint;
+import com.delivery.global.security.jwt.JwtAccessDeniedHandler;
 import com.delivery.global.security.jwt.JwtRequestFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtRequestFilter jwtRequestFilter;
 
     @Bean
@@ -67,7 +69,9 @@ public class SecurityConfig {
                                 .anyRequest()
                                 .authenticated());
         httpSecurity.exceptionHandling(
-                config -> config.authenticationEntryPoint(jwtAuthenticationEntryPoint));
+                config ->
+                        config.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                                .accessDeniedHandler(jwtAccessDeniedHandler));
 
         httpSecurity.sessionManagement(
                 sessionManagement ->
