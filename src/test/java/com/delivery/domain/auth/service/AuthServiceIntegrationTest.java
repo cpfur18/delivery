@@ -39,12 +39,12 @@ class AuthServiceIntegrationTest extends AbstractIntegrationTest {
         // when
         AuthResponse response = authService.signUp(request);
 
-        // then
         User savedUser =
                 userRepository
                         .findWithRolesByUsernameAndDeletedAtIsNull(request.username())
                         .orElseThrow();
 
+        // then
         assertThat(savedUser.getId()).isEqualTo(response.id());
         assertThat(savedUser.getUsername()).isEqualTo(response.username());
         assertThat(passwordEncoder.matches("testtest1234!", savedUser.getPassword())).isTrue();
