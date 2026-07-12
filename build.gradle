@@ -29,6 +29,9 @@ dependencies {
     // .env 파일을 Spring Environment로 로드 (로컬 개발용)
     implementation 'me.paulschwarz:springboot3-dotenv:5.1.0'
 
+    // UUID v7, 시간 정렬 가능으로 인덱스 성능 향상
+    implementation 'com.github.f4b6a3:uuid-creator:6.1.1'
+
     runtimeOnly 'org.postgresql:postgresql'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'

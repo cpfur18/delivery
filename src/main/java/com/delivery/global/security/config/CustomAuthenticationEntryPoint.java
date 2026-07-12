@@ -32,7 +32,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         String message = errorCode.getMessage();
         String error = errorCode.getName();
 
-        log.warn("{} : {}", error, message, authException);
+        log.warn("ErrorCode : {}, ErrorMessage : {}", errorCode.getName(), errorCode.getMessage(), authException);
 
         response.setStatus(httpStatus.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
