@@ -3,6 +3,7 @@ package com.delivery.domain.user.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -11,6 +12,7 @@ import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.dto.response.AuthResponse;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.service.AuthService;
+import com.delivery.global.config.JwtProperties;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +38,7 @@ class AuthControllerUnitTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private JwtUtil jwtUtil;
+    @MockitoBean private JwtProperties jwtProperties;
     @MockitoBean private AuthService authService;
 
     @Nested
@@ -77,6 +80,8 @@ class AuthControllerUnitTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(authService);
         }
 
         static Stream<SignUpRequest> testCase() {
@@ -147,6 +152,8 @@ class AuthControllerUnitTest {
                                         .content(objectMapper.writeValueAsString(request2)))
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message").value("비밀번호를 입력해주세요."));
+
+                verifyNoInteractions(authService);
             }
         }
     }

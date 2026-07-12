@@ -4,6 +4,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -14,7 +16,6 @@ import com.delivery.domain.user.exception.UserErrorCode;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.service.AddressService;
 import com.delivery.global.exception.ErrorCodeRegistry;
-import com.delivery.global.security.jwt.JwtRequestFilter;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.delivery.testconfig.WithMockCustomUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +39,6 @@ class AddressControllerUnitTest {
 
     @MockitoBean private AddressService addressService;
     @MockitoBean private JwtUtil jwtUtil;
-    @MockitoBean private JwtRequestFilter jwtRequestFilter;
     @MockitoBean ErrorCodeRegistry errorCodeRegistry;
 
     private final UUID addressId = UUID.randomUUID();
@@ -92,6 +92,8 @@ class AddressControllerUnitTest {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.error").value("INVALID_PARAMETER_TYPE"));
+
+            verifyNoInteractions(addressService);
         }
     }
 
@@ -116,6 +118,8 @@ class AddressControllerUnitTest {
                     .andExpect(jsonPath("$.data.addressId").value(addressId.toString()))
                     .andExpect(jsonPath("$.data.address").value("주소1"))
                     .andExpect(jsonPath("$.data.addressDetail").value("상세주소1"));
+
+            verify(addressService).findAddress(eq(1L), eq(addressId));
         }
 
         @Test
@@ -132,6 +136,8 @@ class AddressControllerUnitTest {
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.error").value("NOT_EXIST_ADDRESS"));
+
+            verify(addressService).findAddress(eq(1L), eq(addressId));
         }
 
         @Test
@@ -154,6 +160,8 @@ class AddressControllerUnitTest {
                     .andExpect(jsonPath("$.code").value(200))
                     .andExpect(jsonPath("$.data[0].address").value("주소1"))
                     .andExpect(jsonPath("$.data[1].address").value("주소2"));
+
+            verify(addressService).findAddresses(eq(1L));
         }
     }
 
@@ -191,6 +199,8 @@ class AddressControllerUnitTest {
                     .andExpect(
                             jsonPath("$.data.addressDetail").value(updateRequest.addressDetail()))
                     .andExpect(jsonPath("$.data.isDefault").value(updateRequest.isDefault()));
+
+            verify(addressService).updateAddress(eq(1L), eq(addressId), eq(updateRequest));
         }
     }
 
@@ -209,5 +219,7 @@ class AddressControllerUnitTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("배송지 삭제 성공"));
+
+        verify(addressService).deleteAddress(eq(1L), anyString(), eq(addressId));
     }
 }

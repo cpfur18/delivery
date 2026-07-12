@@ -1,4 +1,4 @@
-package com.delivery.global.security.jwt;
+package com.delivery.global.security.config;
 
 import com.delivery.common.RestApiResponse;
 import com.delivery.domain.user.exception.AuthErrorCode;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final ObjectMapper objectMapper;
 
     @Override
@@ -32,7 +32,11 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         String message = errorCode.getMessage();
         String error = errorCode.getName();
 
-        log.warn("ErrorCode : {}, ErrorMessage : {}", errorCode.getName(), errorCode.getMessage(), authException);
+        log.warn(
+                "ErrorCode : {}, ErrorMessage : {}",
+                errorCode.getName(),
+                errorCode.getMessage(),
+                authException);
 
         response.setStatus(httpStatus.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

@@ -8,4 +8,5 @@ import jakarta.validation.constraints.Size;
 public record UpdateNickNameRequest(
         @Size(min = 2, max = 11, message = "INVALID_NICKNAME")
                 @Pattern(regexp = "^[a-zA-Z0-9가-힣]+$", message = "INVALID_NICKNAME")
+                @Schema(description = "닉네임", example = "닉네임")
                 String nickName) {}

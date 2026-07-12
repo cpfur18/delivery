@@ -3,7 +3,6 @@ package com.delivery.domain.user.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import com.delivery.domain.user.dto.UserDtoMapper;
 import com.delivery.domain.user.dto.request.CreateAddressRequest;
 import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.dto.request.UpdateAddressRequest;
@@ -109,9 +108,6 @@ public class AddressServiceIntegrationTest extends AbstractIntegrationTest {
                     addressRepository
                             .findByUserIdAndIsDefaultTrueAndDeletedAtIsNull(userId)
                             .orElseThrow();
-            System.out.println(
-                    "defaultAddress = " + UserDtoMapper.toAddressResponse(defaultAddress));
-            System.out.println("savedAddress = " + savedAddress);
 
             // then
             assertThat(setUpAddresses.get(0).isDefault()).isTrue();

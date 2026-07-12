@@ -1,6 +1,5 @@
 package com.delivery.global.security.config;
 
-import com.delivery.global.security.jwt.JwtAuthenticationEntryPoint;
 import com.delivery.global.security.jwt.JwtRequestFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,8 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final JwtRequestFilter jwtRequestFilter;
     private final AccessDeniedHandler accessDeniedHandler;
 
@@ -71,7 +69,7 @@ public class SecurityConfig {
                                 .permitAll()
 
                                 // 관리자
-                                .requestMatchers("/api/v1/admin/users", "/api/v1/admin/users/*")
+                                .requestMatchers("/api/v1/admin/users/**")
                                 .hasAnyRole("MASTER", "MANAGER")
 
                                 // 나머지
@@ -80,7 +78,7 @@ public class SecurityConfig {
 
         httpSecurity.exceptionHandling(
                 config ->
-                        config.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        config.authenticationEntryPoint(customAuthenticationEntryPoint)
                                 .accessDeniedHandler(accessDeniedHandler));
 
         httpSecurity.sessionManagement(

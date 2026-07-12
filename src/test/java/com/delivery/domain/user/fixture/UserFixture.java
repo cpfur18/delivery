@@ -2,6 +2,8 @@ package com.delivery.domain.user.fixture;
 
 import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.entity.Role;
+import com.delivery.domain.user.entity.User;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -25,6 +27,16 @@ public enum UserFixture {
                 .nickName(nickname)
                 .phoneNumber(phoneNumber)
                 .role(role)
+                .build();
+    }
+
+    public User createUser(long userId) {
+        return User.builder()
+                .id(userId)
+                .username(username)
+                .nickName(nickname)
+                .phoneNumber(phoneNumber)
+                .roles(Set.of(role))
                 .build();
     }
 }

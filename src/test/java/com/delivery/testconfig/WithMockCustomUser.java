@@ -12,7 +12,7 @@ public @interface WithMockCustomUser {
 
     String userName() default "testUser123";
 
-    String nickName() default "mockCustomUser";
+    String nickName() default "닉네임";
 
     String phoneNumber() default "01012345678";
 

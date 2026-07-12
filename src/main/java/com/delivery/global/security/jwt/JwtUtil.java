@@ -1,5 +1,9 @@
 package com.delivery.global.security.jwt;
 
+import static com.delivery.global.config.JwtProperties.ACCESS_TOKEN_VALIDITY;
+import static com.delivery.global.config.JwtProperties.REFRESH_TOKEN_VALIDITY;
+
+import com.delivery.global.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -7,30 +11,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.Serial;
 import java.io.Serializable;
 import java.security.Key;
-import java.time.Duration;
-import java.util.*;
+import java.util.Base64;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import javax.crypto.spec.SecretKeySpec;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class JwtUtil implements Serializable {
     @Serial private static final long serialVersionUID = -2634790745690120103L;
-
-    // Acces Token 30분
-    public static final long ACCESS_TOKEN_VALIDITY = Duration.ofMinutes(30).toMillis();
-
-    // Refresh Token 7일
-    public static final long REFRESH_TOKEN_VALIDITY = Duration.ofDays(7).toMillis();
-
-    @Value("${jwt.secret}")
-    private String accessSecretKey;
-
-    // TODO : 임시로 JWT키와 동일
-    @Value("${jwt.refresh-secret}")
-    private String refreshSecretKey;
+    private final JwtProperties jwtProperties;
 
     public String getUserUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
@@ -56,7 +51,7 @@ public class JwtUtil implements Serializable {
     public Claims getAllClaimsFromAccessToken(String token) {
         Key signingKey =
                 new SecretKeySpec(
-                        Base64.getDecoder().decode(accessSecretKey),
+                        Base64.getDecoder().decode(jwtProperties.getAccessSecret()),
                         SignatureAlgorithm.HS256.getJcaName());
         return getAllClaimsFromToken(token, signingKey);
     }
@@ -85,7 +80,7 @@ public class JwtUtil implements Serializable {
     public String generateAccessToken(UserDetails userDetails, String userUuid) {
         Key signingKey =
                 new SecretKeySpec(
-                        Base64.getDecoder().decode(accessSecretKey),
+                        Base64.getDecoder().decode(jwtProperties.getAccessSecret()),
                         SignatureAlgorithm.HS256.getJcaName());
         return generateToken(userDetails, userUuid, signingKey, ACCESS_TOKEN_VALIDITY);
     }
@@ -107,7 +102,7 @@ public class JwtUtil implements Serializable {
     public Claims getAllClaimsFromRefreshToken(String token) {
         Key signingKey =
                 new SecretKeySpec(
-                        Base64.getDecoder().decode(refreshSecretKey),
+                        Base64.getDecoder().decode(jwtProperties.getRefreshSecret()),
                         SignatureAlgorithm.HS256.getJcaName());
         return getAllClaimsFromToken(token, signingKey);
     }
@@ -115,7 +110,7 @@ public class JwtUtil implements Serializable {
     public String generateRefreshToken(UserDetails userDetails, String userUuid) {
         Key signingKey =
                 new SecretKeySpec(
-                        Base64.getDecoder().decode(refreshSecretKey),
+                        Base64.getDecoder().decode(jwtProperties.getRefreshSecret()),
                         SignatureAlgorithm.HS256.getJcaName());
         return generateToken(userDetails, userUuid, signingKey, REFRESH_TOKEN_VALIDITY);
     }
