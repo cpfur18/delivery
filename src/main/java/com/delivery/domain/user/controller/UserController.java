@@ -1,0 +1,50 @@
+package com.delivery.domain.user.controller;
+
+import com.delivery.common.RestApiResponse;
+import com.delivery.domain.user.dto.request.UpdateUserRequest;
+import com.delivery.domain.user.dto.response.UpdatedUserResponse;
+import com.delivery.domain.user.dto.response.UserValidationResponse;
+import com.delivery.domain.user.response.UserResponse;
+import com.delivery.domain.user.service.UserService;
+import com.delivery.global.security.config.CustomUserDetails;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/users")
+public class UserController {
+    private final UserService userService;
+
+    @GetMapping("/me")
+    public ResponseEntity<RestApiResponse<UserResponse>> getUserInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return ResponseEntity.ok(
+                RestApiResponse.success(HttpStatus.OK, "회원 정보 조회 성공", userService.findUserInfo(customUserDetails.getId())));
+    }
+
+    @PatchMapping("/me") // TODO : API 문서 수정필요
+    public ResponseEntity<RestApiResponse<UpdatedUserResponse>> updateUser(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                      @Valid @RequestBody UpdateUserRequest request) {
+        return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "회원 정보 수정 성공", userService.updateUser(customUserDetails.getId(), request)));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<RestApiResponse<Void>> deleteUser(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        userService.deleteUser(customUserDetails.getId());
+        return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "회원 탈퇴 성공", null));
+    }
+
+    @GetMapping("/check-id")
+    public ResponseEntity<RestApiResponse<UserValidationResponse>> isDuplicationId(@RequestParam String username) {
+        return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "아이디 중복 체크 성공.", userService.isDuplicationId(username)));
+    }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<RestApiResponse<UserValidationResponse>> isDuplicationNickname(@RequestParam String nickName) {
+        return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "닉네임 중복 체크 성공", userService.isDuplicationNickname(nickName)));
+    }
+}
