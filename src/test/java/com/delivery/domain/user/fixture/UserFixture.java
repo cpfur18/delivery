@@ -1,6 +1,6 @@
 package com.delivery.domain.user.fixture;
 
-import com.delivery.domain.auth.dto.request.SignUpRequest;
+import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.enums.Role;
 import lombok.AllArgsConstructor;
 

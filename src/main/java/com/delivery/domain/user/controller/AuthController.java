@@ -1,10 +1,10 @@
-package com.delivery.domain.auth.controller;
+package com.delivery.domain.user.controller;
 
 import com.delivery.common.RestApiResponse;
-import com.delivery.domain.auth.dto.request.LoginRequest;
-import com.delivery.domain.auth.dto.request.SignUpRequest;
-import com.delivery.domain.auth.dto.response.AuthResponse;
-import com.delivery.domain.auth.service.AuthService;
+import com.delivery.domain.user.dto.request.LoginRequest;
+import com.delivery.domain.user.dto.request.SignUpRequest;
+import com.delivery.domain.user.response.AuthResponse;
+import com.delivery.domain.user.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

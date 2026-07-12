@@ -1,7 +1,7 @@
 package com.delivery.domain.user.enums;
 
-import com.delivery.domain.auth.exception.AuthErrorCode;
-import com.delivery.domain.auth.exception.AuthException;
+import com.delivery.domain.user.exception.AuthErrorCode;
+import com.delivery.domain.user.exception.AuthException;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AllArgsConstructor;

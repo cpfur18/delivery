@@ -2,7 +2,7 @@ package com.delivery.global.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.delivery.domain.auth.exception.AuthErrorCode;
+import com.delivery.domain.user.exception.AuthErrorCode;
 import com.delivery.domain.user.exception.UserErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

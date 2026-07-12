@@ -3,7 +3,7 @@ package com.delivery.domain.user.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import com.delivery.domain.auth.dto.request.SignUpRequest;
+import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.dto.request.CreateAddressRequest;
 import com.delivery.domain.user.dto.request.UpdateAddressRequest;
 import com.delivery.domain.user.dto.response.AddressResponse;

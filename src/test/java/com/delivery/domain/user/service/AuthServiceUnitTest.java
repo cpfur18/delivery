@@ -1,15 +1,16 @@
-package com.delivery.domain.auth.service;
+package com.delivery.domain.user.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.delivery.domain.auth.dto.request.LoginRequest;
-import com.delivery.domain.auth.dto.request.SignUpRequest;
-import com.delivery.domain.auth.exception.AuthException;
+import com.delivery.domain.user.dto.request.LoginRequest;
+import com.delivery.domain.user.dto.request.SignUpRequest;
+import com.delivery.domain.user.exception.AuthException;
 import com.delivery.domain.user.enums.Role;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.repository.UserRepository;
+import com.delivery.domain.user.service.AuthService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
