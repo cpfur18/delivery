@@ -19,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -60,7 +61,14 @@ public class OrderController {
         // 현재 로그인 사용자 ID를 Service에 전달
         Long currentUserId = userDetails.getId();
 
-        OrderDetailResponse response = orderService.getOrder(orderId, currentUserId);
+        // 역할별 주문 접근 범위를 Service에서 검증하기 위해 현재 사용자의 권한 목록도 함께 전달
+        Set<String> currentRoles = userDetails.getRoleNames();
+
+        OrderDetailResponse response = orderService.getOrder(
+                orderId,
+                currentUserId,
+                currentRoles
+        );
 
         return ResponseEntity.ok(
                 RestApiResponse.success(
@@ -153,9 +161,15 @@ public class OrderController {
         // 현재 로그인 사용자 ID
         Long currentUserId = userDetails.getId();
 
+        // 현재 로그인 사용자가 가진 역할 목록 추출
+        // 예: ROLE_OWNER, ROLE_MANAGER, ROLE_MASTER
+        Set<String> currentRoles = userDetails.getRoleNames();
+
+
         OrderListResponse response = orderService.getStoreOrders(
                 storeId,
                 currentUserId,
+                currentRoles,
                 startDate,
                 endDate,
                 status,
@@ -233,12 +247,17 @@ public class OrderController {
         // 현재 로그인한 가게 처리 담당 사용자 ID
         Long currentUserId = userDetails.getId();
 
+        // 현재 로그인 사용자가 가진 역할 목록
+        // OWNER 소유권 검증 또는 MANAGER/MASTER 예외 처리를 위해 역할 전달
+        Set<String> currentRoles = userDetails.getRoleNames();
+
         OrderStatusResponse response =
                 orderService.changeStoreOrderStatus(
                         storeId,
                         orderId,
                         OrderStatus.REJECTED,
-                        currentUserId
+                        currentUserId,
+                        currentRoles
                 );
 
         return ResponseEntity.ok(
@@ -262,12 +281,17 @@ public class OrderController {
         // 현재 로그인한 가게 처리 담당 사용자 ID
         Long currentUserId = userDetails.getId();
 
+        // 현재 로그인 사용자가 가진 역할 목록
+        // OWNER 소유권 검증 또는 MANAGER/MASTER 예외 처리를 위해 역할 전달
+        Set<String> currentRoles = userDetails.getRoleNames();
+
         OrderStatusResponse response =
                 orderService.changeStoreOrderStatus(
                         storeId,
                         orderId,
                         OrderStatus.ACCEPTED,
-                        currentUserId
+                        currentUserId,
+                        currentRoles
                 );
 
         return ResponseEntity.ok(
@@ -290,12 +314,17 @@ public class OrderController {
         // 현재 로그인한 가게 처리 담당 사용자 ID
         Long currentUserId = userDetails.getId();
 
+        // 현재 로그인 사용자가 가진 역할 목록
+        // OWNER 소유권 검증 또는 MANAGER/MASTER 예외 처리를 위해 역할 전달
+        Set<String> currentRoles = userDetails.getRoleNames();
+
         OrderStatusResponse response =
                 orderService.changeStoreOrderStatus(
                         storeId,
                         orderId,
                         OrderStatus.COOKING,
-                        currentUserId
+                        currentUserId,
+                        currentRoles
                 );
 
         return ResponseEntity.ok(
@@ -319,12 +348,17 @@ public class OrderController {
         // 현재 로그인한 가게 처리 담당 사용자 ID
         Long currentUserId = userDetails.getId();
 
+        // 현재 로그인 사용자가 가진 역할 목록
+        // OWNER 소유권 검증 또는 MANAGER/MASTER 예외 처리를 위해 역할 전달
+        Set<String> currentRoles = userDetails.getRoleNames();
+
         OrderStatusResponse response =
                 orderService.changeStoreOrderStatus(
                         storeId,
                         orderId,
                         OrderStatus.DELIVERING,
-                        currentUserId
+                        currentUserId,
+                        currentRoles
                 );
 
         return ResponseEntity.ok(
@@ -348,12 +382,17 @@ public class OrderController {
         // 현재 로그인한 가게 처리 담당 사용자 ID
         Long currentUserId = userDetails.getId();
 
+        // 현재 로그인 사용자가 가진 역할 목록
+        // OWNER 소유권 검증 또는 MANAGER/MASTER 예외 처리를 위해 역할 전달
+        Set<String> currentRoles = userDetails.getRoleNames();
+
         OrderStatusResponse response =
                 orderService.changeStoreOrderStatus(
                         storeId,
                         orderId,
                         OrderStatus.DELIVERED,
-                        currentUserId
+                        currentUserId,
+                        currentRoles
                 );
 
         return ResponseEntity.ok(

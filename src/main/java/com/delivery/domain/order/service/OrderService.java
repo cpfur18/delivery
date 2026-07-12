@@ -11,6 +11,8 @@ import com.delivery.domain.order.entity.OrderItem;
 import com.delivery.domain.order.exception.OrderErrorCode;
 import com.delivery.domain.order.enums.OrderStatus;
 import com.delivery.domain.order.repository.OrderRepository;
+import com.delivery.domain.store.entity.Store;
+import com.delivery.domain.store.repository.StoreRepository;
 import com.delivery.global.exception.BusinessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.delivery.domain.order.repository.OrderSpecification.*;
@@ -34,26 +37,29 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
 
+    private final StoreRepository storeRepository;
+
     // 고객 주문 생성
     @Transactional
     public OrderCreateResponse createOrder(
             OrderCreateRequest request,
             Long currentUserId
     ){
-        // 요청한 가게가 실제 존재하는지 확인
-        // 아직 가게(store) 도메인 구조를 몰라 메서드만 분리해둠
-        validateStoreExists(request.storeId());
+        // 요청한 storeId로 실제 존재하고 삭제되지 않은 가게를 조회
+        // 존재하지 않거나 Soft Delete된 가게이면 STORE_NOT_FOUND 예외 발생
+        Store store = findActiveStore(request.storeId());
 
+        // 가게 영엽 여부 확인
+        validateStoreOpen(store);
 
         // 주문 엔티티 생성
-        /* userId는 요청값이 아니라 JWT에서 가져온 로그인 사용자 ID를 사용
-         status는 생성 시 기본값 REQUESTED로 설정됨*/
+        // userId는 요청값이 아니라 JWT에서 가져온 로그인 사용자 ID를 사용
+        // status는 생성 시 기본값 REQUESTED로 설정됨
         Order order = new Order(
                 currentUserId,
                 request.storeId(),
                 request.deliveryAddress()
         );
-
 
         // 요청에 담긴 주문 메뉴 목록을 하나씩 처리
         for(OrderItemCreateRequest itemRequest : request.items()){
@@ -62,8 +68,9 @@ public class OrderService {
             validateOrderQuantity(itemRequest.quantity());
 
             // menuId로 메뉴 정보를 조회하고,
-            // 해당 메뉴가 요청한 storeId에 속한 메뉴인지 확인
+            // TODO 해당 메뉴가 요청한 storeId에 속한 메뉴인지 확인
             // 아직 메뉴 도메인 구조를 모르기 때문에 MenuSnapshot으로 필요한 값만 임시 정의
+            // TODO 고객 주문 생성시, 메뉴스냅샷 관련 코드 MENU 도메인 연결 후 작성하기
             MenuSnapshot menuSnapshot = getMenuSnapshot(
                     request.storeId(),
                     itemRequest.menuId()
@@ -85,6 +92,9 @@ public class OrderService {
 
         }
 
+        // 모든 메뉴 금액이 합산된 후 최소 주문 금액 검증
+        validateMinimumOrderAmount(order, store);
+
         // 주문 저장
         // Order에 Cascade 설정이 있어 OrderItem도 함께 저장됨
         Order savedOrder = orderRepository.save(order);
@@ -98,44 +108,21 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderDetailResponse getOrder(
             UUID orderId,
-            Long currentUserId
+            Long currentUserId,
+            Set<String> currentRoles
     ) {
         // 삭제되지 않은 주문 주회
         // 주문 단건 응답에 메뉴 상세 목록이 포함되므로 orderItems도 함께 조회
         Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        /*
-         * TODO: Spring Security/JWT 및 권한(Role) 적용 후 접근 권한 검증 로직 확장 필요
-         * TODO: Security/JWT + Role 기반 접근 정책 확정 후 보완 필요
-         *
-         * 현재는 currentUserId만 전달받아 CUSTOMER 기준의 본인 주문 여부만 검증하고 있음
-         *
-         * 주문 단건 조회 접근 정책:
-         * 1. CUSTOMER
-         *    - 본인이 생성한 주문만 조회 가능
-         *    - order.userId == currentUserId 인 경우만 허용
-         *
-         * 2. OWNER
-         *    - 본인 가게의 주문만 조회 가능
-         *    - order.storeId가 로그인한 OWNER의 storeId와 일치하는 경우만 허용
-         *
-         * 3. MANAGER
-         *    - 서비스 담당자 권한
-         *    - 정책에 따라 전체 주문 또는 담당 범위 주문 조회 가능
-         *
-         * 4. MASTER
-         *    - 최종 관리자 권한
-         *    - 전체 주문 조회 가능
-         *
-         * 필요한 추가 작업:
-         * 1. Controller에서 CustomUserDetails의 role 정보까지 Service에 전달할지 검토
-         * 2. Store 도메인 연동 후 storeId 기준 OWNER 소유 가게 검증 추가
-         * 3. MANAGER / MASTER는 별도 소유권 검증 없이 조회 허용할지 정책 확정
-         */
 
-        // 현재는 인증/인가 구조가 확정되지 않았으므로, CUSTOMER 기준으로 currentUserId와 order.userId만 임시 검증
-        validateOrderAccessForCustomer(order, currentUserId);
+        // 현재 사용자의 역할(role)과 주문 소유 관계(id)에 따라 접근 가능 여부 검증
+        validateOrderDetailAccess(
+                order,
+                currentUserId,
+                currentRoles
+        );
 
         // 조회된 주문 엔티티 상세 응답 DTO 변환
         return OrderDetailResponse.from(order);
@@ -200,7 +187,8 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderListResponse getStoreOrders(
             UUID storeId,
-            Long currentUserId,         // Store 엔티티 연동 후 실제 소유권 검증을 넣을 핵심 지점
+            Long currentUserId,
+            Set<String> currentRoles,
             LocalDate startDate,
             LocalDate endDate,
             OrderStatus status,
@@ -208,14 +196,17 @@ public class OrderService {
             int size,
             String sort
     ) {
-        // TODO: Store 도메인 연동 후 storeId 존재 여부 검증
-        // 예: storeRepository.existsById(storeId) 또는 storeService.validateStoreExists(storeId)
 
-        // TODO: Spring Security/JWT 및 Store 도메인 연동 후 접근 권한 검증
-        // OWNER: 로그인한 사용자가 해당 storeId의 소유자인 경우만 조회 가능
-        // MANAGER / MASTER: 전체 가게 주문 조회 가능
-        // 현재는 Store/User 도메인이 연결 전이라 storeId 조건 검색만 수행
+        // URL로 받은 storeId의 가게가 실제 존재하고 삭제되지 않았는지 확인
+        Store store = findActiveStore(storeId);
 
+        // 역할별 가게 접근 권한 검증
+        // 현재 로그인한 OWNER가 해당 가게의 실제 소유자인지 확인(OWNER는 본인 가게만 가능)
+        // Store.userId == JWT 로그인 사용자 ID인 경우만 상태 변경 허용
+        // MANAGER / MASTER는 모든 가게 가능
+        validateStoreAccess(store, currentUserId, currentRoles);
+
+        // 검색 시작일과 종료일 범위 검증
         validateDateRange(startDate, endDate);
 
         LocalDateTime startDateTime = startDate != null
@@ -229,6 +220,7 @@ public class OrderService {
         int normalizedSize = normalizePageSize(size);
         Pageable pageable = createPageable(page, normalizedSize, sort);
 
+        // 검증이 완료된 storeId의 주문만 검색(조회)
         // storeId 기준으로 본인 가게 주문만 조회
         // 날짜, 상태 조건은 값이 있을 때만 추가됨
         Specification<Order> spec = Specification.<Order>unrestricted()
@@ -340,37 +332,36 @@ public class OrderService {
     }
 
 
-    // 가게 상태 변경
+    // 가게 주문 상태 변경
     @Transactional
     public OrderStatusResponse changeStoreOrderStatus(
             UUID storeId,
             UUID orderId,
             OrderStatus nextStatus,
-            Long currentUserId
+            Long currentUserId,
+            Set<String> currentRoles
     ) {
         // 삭제되지 않은 주문 조회
         Order order = findActiveOrder(orderId);
 
-        // 요청 URL의 storeId와 주문의 storeId가 같은지 검증
+        // 요청 URL의 storeId와 실제 주문의 storeId가 같은지 확인
+        // 다른 가게의 주문 ID를 URL에 넣은 경우 차단
         validateOrderBelongsToStore(order, storeId);
 
-        /*
-         * TODO: Store 도메인 + Security/JWT 연동 후 권한 검증 추가
-         *
-         * OWNER
-         * - 로그인한 사용자가 해당 storeId의 소유자인 경우만 변경 가능
-         *
-         * MANAGER / MASTER
-         * - 정책에 따라 모든 가게 주문 상태 변경 가능
-         *
-         * 현재는 Store/User 도메인 연동 전이므로
-         * storeId가 주문의 storeId와 일치하는지만 검증한다.
-         */
+        // URL로 받은 storeId의 가게가 실제 존재하는지 확인
+        Store store = findActiveStore(storeId);
 
+        // 역할별 가게 접근 권한 검증
+        // 현재 로그인한 OWNER가 해당 가게의 실제 소유자인지 확인(OWNER는 본인 가게만 가능)
+        // Store.userId == JWT 로그인 사용자 ID인 경우만 상태 변경 허용
+        // MANAGER / MASTER는 모든 가게 가능
+        validateStoreAccess(store, currentUserId, currentRoles);
+
+        // 현재 상태에서 요청한 다음 상태로 변경 가능한지 확인
         // 상태 전이 가능 여부 검증
         validateStatusTransition(order, nextStatus);
 
-        // 주문 상태 변경
+        // 모든 검증을 통과하면 주문 상태 변경
         order.changeStatus(nextStatus);
 
         return OrderStatusResponse.from(order);
@@ -385,10 +376,118 @@ public class OrderService {
                 );
     }
 
-    // 주문이 해당 가게에 속하는지 검증
+    // 삭제되지 않은 가게 조회 메서드
+    private Store findActiveStore(UUID storeId) {
+        // storeId에 해당하는 가게가 존재하고 Soft Delete되지 않았는지 조회
+        return storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
+                .orElseThrow(() ->
+                        new BusinessException(OrderErrorCode.STORE_NOT_FOUND)
+                );
+    }
+
+    // 현재 로그인한 사용자가 해당 가게의 실제 소유자인지 검증
+    /*private void validateStoreOwner(Store store, Long currentUserId) {
+        // Store.userId는 해당 가게를 소유한 OWNER의 사용자 ID
+        // currentUserId는 JWT 인증 객체에서 가져온 현재 로그인 사용자 ID
+        if (!store.getUserId().equals(currentUserId)) {
+            throw new BusinessException(
+                    OrderErrorCode.FORBIDDEN_STORE_ACCESS
+            );
+        }
+    }*/
+
+    // 역할별 가게 접근 권한 검증
+    // OWNER - 본인이 소유한 가게만 접근 가능
+    // MANAGER / MASTER - 가게 소유자 ID와 관계없이 모든 가게 접근 가능
+    private void validateStoreAccess(
+            Store store,
+            Long currentUserId,
+            Set<String> currentRoles
+    ) {
+        // MANAGER 또는 MASTER라면 소유권 검증 없이 접근 허용
+        boolean isAdmin =
+                currentRoles.contains("ROLE_MANAGER")
+                        || currentRoles.contains("ROLE_MASTER");
+
+        if (isAdmin) {
+            return;
+        }
+
+        // 관리자가 아니라면 OWNER 본인 가게인지 확인
+        if (!store.getUserId().equals(currentUserId)) {
+            throw new BusinessException(
+                    OrderErrorCode.FORBIDDEN_STORE_ACCESS
+            );
+        }
+    }
+
+    // 주문 단건 조회 접근 권한 검증
+    /* CUSTOMER - 본인이 생성한 주문만 조회 가능
+     * OWNER - 본인이 소유한 가게의 주문만 조회 가능
+     * MANAGER / MASTER - 소유권과 관계없이 전체 주문 조회 가능
+     */
+    private void validateOrderDetailAccess(
+            Order order,
+            Long currentUserId,
+            Set<String> currentRoles
+    ) {
+        // MANAGER 또는 MASTER는 전체 주문 조회 가능
+        boolean isAdmin =
+                currentRoles.contains("ROLE_MANAGER")
+                        || currentRoles.contains("ROLE_MASTER");
+
+        if (isAdmin) {
+            return;
+        }
+
+        // CUSTOMER는 본인이 생성한 주문이면 조회 가능
+        boolean isOwnOrder =
+                currentRoles.contains("ROLE_CUSTOMER")
+                        && order.getUserId().equals(currentUserId);
+
+        if (isOwnOrder) {
+            return;
+        }
+
+        // OWNER라면 주문이 속한 가게를 조회한 뒤 소유자 여부 확인
+        if (currentRoles.contains("ROLE_OWNER")) {
+            Store store = findActiveStore(order.getStoreId());
+
+            boolean isOwnStore =
+                    store.getUserId().equals(currentUserId);
+
+            if (isOwnStore) {
+                return;
+            }
+        }
+
+        // 어떤 접근 조건도 충족하지 못하면 조회 차단
+        throw new BusinessException(
+                OrderErrorCode.FORBIDDEN_ORDER_ACCESS
+        );
+    }
+
+
+    // 주문이 해당 URL 가게의 주문인지 검증
     private void validateOrderBelongsToStore(Order order, UUID storeId) {
         if (!order.getStoreId().equals(storeId)) {
             throw new BusinessException(OrderErrorCode.ORDER_STORE_MISMATCH);
+        }
+    }
+
+    // 가게 영업 여부 검증
+    private void validateStoreOpen(Store store) {
+        if (!Boolean.TRUE.equals(store.getIsOpen())) {
+            throw new BusinessException(OrderErrorCode.STORE_NOT_OPEN);
+        }
+    }
+
+    // 최소 주문 금액 검증
+    private void validateMinimumOrderAmount(Order order, Store store) {
+        if (order.getTotalPrice() < store.getMinOrderAmount()) {
+            throw new BusinessException(
+                    OrderErrorCode.MINIMUM_ORDER_AMOUNT_NOT_MET
+            );
         }
     }
 
@@ -455,8 +554,6 @@ public class OrderService {
     }
 
 
-
-
     // Customer 검증 메서드
     private void validateOrderAccessForCustomer(Order order, Long currentUserId) {
         if (!order.getUserId().equals(currentUserId)) {
@@ -464,17 +561,13 @@ public class OrderService {
         }
     }
 
-
-    // 가게 존재 여부 확인하는 메서드
-    private void validateStoreExists(UUID storeId) {
-        // TODO: 가게 도메인 Repository 또는 Service 확정 후 구현
-        // 현재는 주문 생성 API 흐름 테스트를 위해 통과 처리
-
-        /* 예시:
-         boolean exists = storeRepository.existsById(storeId);
-         if (!exists) {
-             throw new BusinessException(OrderErrorCode.STORE_NOT_FOUND);
-         }*/
+    // 수량 검증 메서드
+    private void validateOrderQuantity(Integer quantity) {
+        // Request DTO에서 @Min으로 검증하더라도
+        // 서비스 계층에서도 핵심 비즈니스 규칙은 한 번 더 보호할 수 있음
+        if (quantity == null || quantity < 1) {
+            throw new BusinessException(OrderErrorCode.INVALID_ORDER_QUANTITY);
+        }
     }
 
     // 메뉴 스냅샷 저장
@@ -498,16 +591,6 @@ public class OrderService {
 
 //        throw new UnsupportedOperationException("메뉴 도메인 연결 후 구현 필요");
 
-
-    }
-
-    // 수량 검증 메서드
-    private void validateOrderQuantity(Integer quantity) {
-        // Request DTO에서 @Min으로 검증하더라도
-        // 서비스 계층에서도 핵심 비즈니스 규칙은 한 번 더 보호할 수 있음
-        if (quantity == null || quantity < 1) {
-            throw new BusinessException(OrderErrorCode.INVALID_ORDER_QUANTITY);
-        }
     }
 
     // 주문 도메인에서 메뉴 도메인으로부터 필요한 값만 담는 내부 DTO
