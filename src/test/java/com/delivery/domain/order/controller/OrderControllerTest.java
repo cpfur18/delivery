@@ -1,5 +1,6 @@
 package com.delivery.domain.order.controller;
 
+import com.delivery.domain.ai.client.GeminiClient;
 import com.delivery.domain.order.enums.OrderStatus;
 import com.delivery.domain.order.service.OrderService;
 import com.delivery.global.security.config.CustomUserDetails;
@@ -48,6 +49,10 @@ class OrderControllerTest {
     // Controller 테스트에서는 실제 주문 비즈니스 로직을 실행하지 않음
     @MockitoBean
     private OrderService orderService;
+
+    // 주문 Controller 테스트와 무관한 외부 Gemini Client는 Mock 처리
+    @MockitoBean
+    private GeminiClient geminiClient;
 
     // 이전 테스트에서 발생한 (OrderService) Mock 호출 기록을 제거하여
     // 각 테스트가 독립적으로 verifyNoInteractions()를 검증할 수 있도록 한다
