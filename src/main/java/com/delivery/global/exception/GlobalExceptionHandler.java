@@ -19,7 +19,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<RestApiResponse<?>> handleBusinessException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
-        log.warn("{} : {}", errorCode.getName(), errorCode.getMessage(), e);
+        log.warn(
+                "ErrorCode : {}, ErrorMessage : {}",
+                errorCode.getName(),
+                errorCode.getMessage(),
+                e);
 
         return buildResponseEntity(errorCode);
     }
@@ -35,7 +39,11 @@ public class GlobalExceptionHandler {
             errorCode = GlobalErrorCode.INVALID_PARAMETER_TYPE;
         }
 
-        log.warn("{} : {}", errorCode.getName(), errorCode.getMessage(), e);
+        log.warn(
+                "ErrorCode : {}, ErrorMessage : {}",
+                errorCode.getName(),
+                errorCode.getMessage(),
+                e);
 
         return buildResponseEntity(errorCode);
     }
@@ -44,7 +52,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<RestApiResponse<?>> handleMethodArgumentTypeMismatchException(
             MethodArgumentTypeMismatchException e) {
         ErrorCode errorCode = GlobalErrorCode.INVALID_PARAMETER_TYPE;
-        log.warn("{} : {}", errorCode.getName(), errorCode.getMessage(), e);
+        log.warn(
+                "ErrorCode : {}, ErrorMessage : {}",
+                errorCode.getName(),
+                errorCode.getMessage(),
+                e);
 
         return buildResponseEntity(errorCode);
     }
@@ -56,5 +68,20 @@ public class GlobalExceptionHandler {
                                 errorCode.getHttpStatus(),
                                 errorCode.getMessage(),
                                 errorCode.getName()));
+    }
+
+    // TODO : HttpMessageNotReadableException 에러 처리
+    // TODO : InsufficientAuthenticationException 에러 처리
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<RestApiResponse<?>> handleException(Exception e) {
+        ErrorCode errorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
+        log.error(
+                "ErrorCode : {}, ErrorMessage : {}",
+                errorCode.getName(),
+                errorCode.getMessage(),
+                e);
+
+        return buildResponseEntity(errorCode);
     }
 }

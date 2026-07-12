@@ -33,7 +33,11 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         String message = errorCode.getMessage();
         String error = errorCode.getName();
 
-        log.warn("{} : {}", error, message, accessDeniedException);
+        log.warn(
+                "ErrorCode : {}, ErrorMessage : {}",
+                errorCode.getName(),
+                errorCode.getMessage(),
+                accessDeniedException);
 
         response.setStatus(httpStatus.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

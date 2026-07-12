@@ -1,5 +1,9 @@
 package com.delivery.global.security.jwt;
 
+import static com.delivery.global.config.JwtProperties.ACCESS_TOKEN_VALIDITY;
+import static com.delivery.global.config.JwtProperties.REFRESH_TOKEN_VALIDITY;
+
+import com.delivery.global.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -7,33 +11,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.Serial;
 import java.io.Serializable;
 import java.security.Key;
-import java.time.Duration;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import javax.crypto.spec.SecretKeySpec;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class JwtUtil implements Serializable {
     @Serial private static final long serialVersionUID = -2634790745690120103L;
-
-    // Acces Token 30분
-    public static final long ACCESS_TOKEN_VALIDITY = Duration.ofMinutes(30).toMillis();
-
-    // Refresh Token 7일
-    public static final long REFRESH_TOKEN_VALIDITY = Duration.ofDays(7).toMillis();
-
-    @Value("${jwt.secret}")
-    private String accessSecretKey;
-
-    // TODO : 임시로 JWT키와 동일
-    @Value("${jwt.refresh-secret}")
-    private String refreshSecretKey;
+    private final JwtProperties jwtProperties;
 
     public String getUserUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
@@ -59,15 +51,7 @@ public class JwtUtil implements Serializable {
     public Claims getAllClaimsFromAccessToken(String token) {
         Key signingKey =
                 new SecretKeySpec(
-                        Base64.getDecoder().decode(accessSecretKey),
-                        SignatureAlgorithm.HS256.getJcaName());
-        return getAllClaimsFromToken(token, signingKey);
-    }
-
-    public Claims getAllClaimsFromRefreshToken(String token) {
-        Key signingKey =
-                new SecretKeySpec(
-                        Base64.getDecoder().decode(refreshSecretKey),
+                        Base64.getDecoder().decode(jwtProperties.getAccessSecret()),
                         SignatureAlgorithm.HS256.getJcaName());
         return getAllClaimsFromToken(token, signingKey);
     }
@@ -78,11 +62,11 @@ public class JwtUtil implements Serializable {
     }
 
     private String generateToken(
-            UserDetails userDetails, Long userId, Key signingKey, long validity) {
+            UserDetails userDetails, String userUuid, Key signingKey, long validity) {
         Map<String, Object> claims = new HashMap<>();
         Date date = new Date();
 
-        claims.put("userId", userId);
+        claims.put("userUuid", userUuid);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -93,28 +77,15 @@ public class JwtUtil implements Serializable {
                 .compact();
     }
 
-    public String generateAccessToken(UserDetails userDetails, Long memberId) {
+    public String generateAccessToken(UserDetails userDetails, String userUuid) {
         Key signingKey =
                 new SecretKeySpec(
-                        Base64.getDecoder().decode(accessSecretKey),
+                        Base64.getDecoder().decode(jwtProperties.getAccessSecret()),
                         SignatureAlgorithm.HS256.getJcaName());
-        return generateToken(userDetails, memberId, signingKey, ACCESS_TOKEN_VALIDITY);
-    }
-
-    public String generateRefreshToken(UserDetails userDetails, Long memberId) {
-        Key signingKey =
-                new SecretKeySpec(
-                        Base64.getDecoder().decode(refreshSecretKey),
-                        SignatureAlgorithm.HS256.getJcaName());
-        return generateToken(userDetails, memberId, signingKey, REFRESH_TOKEN_VALIDITY);
+        return generateToken(userDetails, userUuid, signingKey, ACCESS_TOKEN_VALIDITY);
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {
-        String username = getUserUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
-
-    public Boolean validateRefreshToken(String token, UserDetails userDetails) {
         String username = getUserUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
@@ -126,5 +97,26 @@ public class JwtUtil implements Serializable {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    public Claims getAllClaimsFromRefreshToken(String token) {
+        Key signingKey =
+                new SecretKeySpec(
+                        Base64.getDecoder().decode(jwtProperties.getRefreshSecret()),
+                        SignatureAlgorithm.HS256.getJcaName());
+        return getAllClaimsFromToken(token, signingKey);
+    }
+
+    public String generateRefreshToken(UserDetails userDetails, String userUuid) {
+        Key signingKey =
+                new SecretKeySpec(
+                        Base64.getDecoder().decode(jwtProperties.getRefreshSecret()),
+                        SignatureAlgorithm.HS256.getJcaName());
+        return generateToken(userDetails, userUuid, signingKey, REFRESH_TOKEN_VALIDITY);
+    }
+
+    public Boolean validateRefreshToken(String token, UserDetails userDetails) {
+        String username = getUserUsernameFromToken(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 }
