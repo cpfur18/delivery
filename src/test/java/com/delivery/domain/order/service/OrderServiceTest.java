@@ -1,5 +1,14 @@
 package com.delivery.domain.order.service;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+
 import com.delivery.domain.menu.repository.MenuRepository;
 import com.delivery.domain.order.dto.response.OrderDetailResponse;
 import com.delivery.domain.order.dto.response.OrderListResponse;
@@ -10,6 +19,9 @@ import com.delivery.domain.order.repository.OrderRepository;
 import com.delivery.domain.store.entity.Store;
 import com.delivery.domain.store.repository.StoreRepository;
 import com.delivery.global.exception.BusinessException;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,33 +34,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
 
-    @Mock
-    private OrderRepository orderRepository;
+    @Mock private OrderRepository orderRepository;
 
-    @Mock
-    private StoreRepository storeRepository;
+    @Mock private StoreRepository storeRepository;
 
-    @Mock
-    private MenuRepository menuRepository;
+    @Mock private MenuRepository menuRepository;
 
-    @InjectMocks
-    private OrderService orderService;
+    @InjectMocks private OrderService orderService;
 
     private UUID storeId;
     private UUID otherStoreId;
@@ -90,37 +85,24 @@ class OrderServiceTest {
                     .willReturn(Optional.of(store));
 
             // 실제 주문 데이터가 없어도 권한 검증 흐름은 확인할 수 있도록 빈 페이지 반환
-            given(orderRepository.findAll(
-                    any(Specification.class),
-                    any(Pageable.class)
-            )).willReturn(Page.empty());
+            given(orderRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .willReturn(Page.empty());
 
             Set<String> roles = Set.of("ROLE_OWNER");
 
             // when
-            OrderListResponse response = orderService.getStoreOrders(
-                    storeId,
-                    ownerId,
-                    roles,
-                    null,
-                    null,
-                    null,
-                    0,
-                    10,
-                    "createdAt,desc"
-            );
+            OrderListResponse response =
+                    orderService.getStoreOrders(
+                            storeId, ownerId, roles, null, null, null, 0, 10, "createdAt,desc");
 
             // then
             assertThat(response).isNotNull();
 
             // 본인 가게이므로 예외 없이 Repository 검색까지 실행되어야 한다.
-            verify(storeRepository)
-                    .findByStoreIdAndDeletedAtIsNull(storeId);
+            verify(storeRepository).findByStoreIdAndDeletedAtIsNull(storeId);
 
-            verify(orderRepository)
-                    .findAll(any(Specification.class), any(Pageable.class));
+            verify(orderRepository).findAll(any(Specification.class), any(Pageable.class));
         }
-
 
         @Test
         @DisplayName("OWNER는 다른 OWNER의 가게 주문 내역을 조회할 수 없다")
@@ -134,19 +116,19 @@ class OrderServiceTest {
             Set<String> roles = Set.of("ROLE_OWNER");
 
             // when & then
-            assertThatThrownBy(() ->
-                    orderService.getStoreOrders(
-                            storeId,
-                            ownerId,
-                            roles,
-                            null,
-                            null,
-                            null,
-                            0,
-                            10,
-                            "createdAt,desc"
-                    )
-            ).isInstanceOf(BusinessException.class);
+            assertThatThrownBy(
+                            () ->
+                                    orderService.getStoreOrders(
+                                            storeId,
+                                            ownerId,
+                                            roles,
+                                            null,
+                                            null,
+                                            null,
+                                            0,
+                                            10,
+                                            "createdAt,desc"))
+                    .isInstanceOf(BusinessException.class);
 
             // 소유권 검증에서 실패하므로 주문 검색 Repository까지 실행되면 안 된다.
             verifyNoInteractions(orderRepository);
@@ -161,30 +143,27 @@ class OrderServiceTest {
             given(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId))
                     .willReturn(Optional.of(otherOwnerStore));
 
-            given(orderRepository.findAll(
-                    any(Specification.class),
-                    any(Pageable.class)
-            )).willReturn(Page.empty());
+            given(orderRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .willReturn(Page.empty());
 
             Set<String> roles = Set.of("ROLE_MANAGER");
 
             // when & then
-            assertThatCode(() ->
-                    orderService.getStoreOrders(
-                            storeId,
-                            ownerId,
-                            roles,
-                            null,
-                            null,
-                            null,
-                            0,
-                            10,
-                            "createdAt,desc"
-                    )
-            ).doesNotThrowAnyException();
+            assertThatCode(
+                            () ->
+                                    orderService.getStoreOrders(
+                                            storeId,
+                                            ownerId,
+                                            roles,
+                                            null,
+                                            null,
+                                            null,
+                                            0,
+                                            10,
+                                            "createdAt,desc"))
+                    .doesNotThrowAnyException();
 
-            verify(orderRepository)
-                    .findAll(any(Specification.class), any(Pageable.class));
+            verify(orderRepository).findAll(any(Specification.class), any(Pageable.class));
         }
 
         @Test
@@ -196,27 +175,25 @@ class OrderServiceTest {
             given(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId))
                     .willReturn(Optional.of(otherOwnerStore));
 
-            given(orderRepository.findAll(
-                    any(Specification.class),
-                    any(Pageable.class)
-            )).willReturn(Page.empty());
+            given(orderRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .willReturn(Page.empty());
 
             Set<String> roles = Set.of("ROLE_MASTER");
 
             // when & then
-            assertThatCode(() ->
-                    orderService.getStoreOrders(
-                            storeId,
-                            ownerId,
-                            roles,
-                            null,
-                            null,
-                            null,
-                            0,
-                            10,
-                            "createdAt,desc"
-                    )
-            ).doesNotThrowAnyException();
+            assertThatCode(
+                            () ->
+                                    orderService.getStoreOrders(
+                                            storeId,
+                                            ownerId,
+                                            roles,
+                                            null,
+                                            null,
+                                            null,
+                                            0,
+                                            10,
+                                            "createdAt,desc"))
+                    .doesNotThrowAnyException();
         }
     }
 
@@ -244,11 +221,7 @@ class OrderServiceTest {
             Set<String> roles = Set.of("ROLE_CUSTOMER");
 
             // when
-            OrderDetailResponse response = orderService.getOrder(
-                    order.getId(),
-                    customerId,
-                    roles
-            );
+            OrderDetailResponse response = orderService.getOrder(order.getId(), customerId, roles);
 
             // then
             assertThat(response).isNotNull();
@@ -266,13 +239,8 @@ class OrderServiceTest {
             Set<String> roles = Set.of("ROLE_CUSTOMER");
 
             // when & then
-            assertThatThrownBy(() ->
-                    orderService.getOrder(
-                            order.getId(),
-                            customerId,
-                            roles
-                    )
-            ).isInstanceOf(BusinessException.class);
+            assertThatThrownBy(() -> orderService.getOrder(order.getId(), customerId, roles))
+                    .isInstanceOf(BusinessException.class);
 
             // CUSTOMER 접근 검증에서는 Store 조회가 필요하지 않다.
             verifyNoInteractions(storeRepository);
@@ -294,11 +262,7 @@ class OrderServiceTest {
             Set<String> roles = Set.of("ROLE_OWNER");
 
             // when
-            OrderDetailResponse response = orderService.getOrder(
-                    order.getId(),
-                    ownerId,
-                    roles
-            );
+            OrderDetailResponse response = orderService.getOrder(order.getId(), ownerId, roles);
 
             // then
             assertThat(response).isNotNull();
@@ -320,13 +284,8 @@ class OrderServiceTest {
             Set<String> roles = Set.of("ROLE_OWNER");
 
             // when & then
-            assertThatThrownBy(() ->
-                    orderService.getOrder(
-                            order.getId(),
-                            ownerId,
-                            roles
-                    )
-            ).isInstanceOf(BusinessException.class);
+            assertThatThrownBy(() -> orderService.getOrder(order.getId(), ownerId, roles))
+                    .isInstanceOf(BusinessException.class);
         }
 
         @Test
@@ -341,13 +300,8 @@ class OrderServiceTest {
             Set<String> roles = Set.of("ROLE_MANAGER");
 
             // when & then
-            assertThatCode(() ->
-                    orderService.getOrder(
-                            order.getId(),
-                            999L,
-                            roles
-                    )
-            ).doesNotThrowAnyException();
+            assertThatCode(() -> orderService.getOrder(order.getId(), 999L, roles))
+                    .doesNotThrowAnyException();
 
             // MANAGER는 전체 주문 조회가 가능하므로 Store 소유권 조회가 실행되지 않아야 한다.
             verifyNoInteractions(storeRepository);
@@ -365,18 +319,12 @@ class OrderServiceTest {
             Set<String> roles = Set.of("ROLE_MASTER");
 
             // when & then
-            assertThatCode(() ->
-                    orderService.getOrder(
-                            order.getId(),
-                            999L,
-                            roles
-                    )
-            ).doesNotThrowAnyException();
+            assertThatCode(() -> orderService.getOrder(order.getId(), 999L, roles))
+                    .doesNotThrowAnyException();
 
             verifyNoInteractions(storeRepository);
         }
     }
-
 
     /* 가게 주문 상태 변경 권한 테스트
      * OWNER:
@@ -406,12 +354,7 @@ class OrderServiceTest {
             // when
             OrderStatusResponse response =
                     orderService.changeStoreOrderStatus(
-                            storeId,
-                            order.getId(),
-                            OrderStatus.ACCEPTED,
-                            ownerId,
-                            roles
-                    );
+                            storeId, order.getId(), OrderStatus.ACCEPTED, ownerId, roles);
 
             // then
             assertThat(response.status()).isEqualTo(OrderStatus.ACCEPTED);
@@ -434,15 +377,15 @@ class OrderServiceTest {
             Set<String> roles = Set.of("ROLE_OWNER");
 
             // when & then
-            assertThatThrownBy(() ->
-                    orderService.changeStoreOrderStatus(
-                            storeId,
-                            order.getId(),
-                            OrderStatus.ACCEPTED,
-                            ownerId,
-                            roles
-                    )
-            ).isInstanceOf(BusinessException.class);
+            assertThatThrownBy(
+                            () ->
+                                    orderService.changeStoreOrderStatus(
+                                            storeId,
+                                            order.getId(),
+                                            OrderStatus.ACCEPTED,
+                                            ownerId,
+                                            roles))
+                    .isInstanceOf(BusinessException.class);
 
             // 검증 실패로 실제 상태는 변경되지 않아야 한다.
             assertThat(order.getStatus()).isEqualTo(OrderStatus.REQUESTED);
@@ -466,12 +409,7 @@ class OrderServiceTest {
             // when
             OrderStatusResponse response =
                     orderService.changeStoreOrderStatus(
-                            storeId,
-                            order.getId(),
-                            OrderStatus.ACCEPTED,
-                            999L,
-                            roles
-                    );
+                            storeId, order.getId(), OrderStatus.ACCEPTED, 999L, roles);
 
             // then
             assertThat(response.status()).isEqualTo(OrderStatus.ACCEPTED);
@@ -495,18 +433,12 @@ class OrderServiceTest {
             // when
             OrderStatusResponse response =
                     orderService.changeStoreOrderStatus(
-                            storeId,
-                            order.getId(),
-                            OrderStatus.ACCEPTED,
-                            999L,
-                            roles
-                    );
+                            storeId, order.getId(), OrderStatus.ACCEPTED, 999L, roles);
 
             // then
             assertThat(response.status()).isEqualTo(OrderStatus.ACCEPTED);
         }
     }
-
 
     // 테스트용 Store 생성 메서드
     // Store는 Builder를 제공하므로 테스트에 필요한 값만 설정한다.
@@ -529,10 +461,6 @@ class OrderServiceTest {
     // 테스트용 Order 생성 메서드
     // Order 생성자는 기본 상태를 REQUESTED로 설정한다.
     private Order createOrder(Long userId, UUID storeId) {
-        return new Order(
-                userId,
-                storeId,
-                "서울시 테스트 배송지"
-        );
+        return new Order(userId, storeId, "서울시 테스트 배송지");
     }
 }

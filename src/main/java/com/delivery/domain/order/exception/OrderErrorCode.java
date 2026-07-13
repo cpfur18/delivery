@@ -13,7 +13,6 @@ public enum OrderErrorCode implements ErrorCode {
     STORE_NOT_OPEN(HttpStatus.BAD_REQUEST, "현재 영업 중인 가게가 아닙니다."),
     MINIMUM_ORDER_AMOUNT_NOT_MET(HttpStatus.BAD_REQUEST, "최소 주문 금액을 충족하지 못했습니다."),
 
-
     // 조회 조건 검증
     INVALID_ORDER_DATE_RANGE(HttpStatus.BAD_REQUEST, "조회 시작일은 종료일보다 늦을 수 없습니다."),
     INVALID_PAGE_SIZE(HttpStatus.BAD_REQUEST, "페이지 크기는 10, 30, 50만 가능합니다."),
@@ -25,7 +24,6 @@ public enum OrderErrorCode implements ErrorCode {
     ORDER_COMPLETE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "현재 상태에서는 주문을 완료할 수 없습니다."),
     ORDER_ALREADY_TERMINATED(HttpStatus.BAD_REQUEST, "이미 종료된 주문입니다."),
 
-
     // 401 Unauthorized
     // 인증 및 인가
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."),
@@ -35,7 +33,6 @@ public enum OrderErrorCode implements ErrorCode {
     FORBIDDEN_ORDER_ACCESS(HttpStatus.FORBIDDEN, "해당 주문에 접근할 권한이 없습니다."),
     FORBIDDEN_ORDER_STATUS_CHANGE(HttpStatus.FORBIDDEN, "주문 상태를 변경할 권한이 없습니다."),
     FORBIDDEN_STORE_ACCESS(HttpStatus.FORBIDDEN, "해당 가게에 접근할 권한이 없습니다."),
-
 
     // 404 Not Found
     // 리소스 조회 실패
@@ -49,7 +46,6 @@ public enum OrderErrorCode implements ErrorCode {
         this.httpStatus = httpStatus;
         this.message = message;
     }
-
 
     @Override
     public HttpStatus getHttpStatus() {
