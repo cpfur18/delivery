@@ -12,9 +12,12 @@ import com.delivery.domain.ai.exception.AiErrorCode;
 import com.delivery.domain.ai.exception.AiException;
 import com.delivery.domain.ai.service.AiService;
 import com.delivery.domain.menu.dto.response.MenuResponse;
+import com.delivery.domain.menu.dto.response.MenuSearchResponse;
+import com.delivery.domain.menu.dto.response.MenuSearchView;
 import com.delivery.domain.menu.dto.response.MenuSnapshot;
 import com.delivery.domain.menu.dto.response.MenuView;
 import com.delivery.domain.menu.dto.response.PublicMenuResponse;
+import com.delivery.domain.menu.dto.response.PublicMenuSearchResponse;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.menu.exception.MenuException;
@@ -335,32 +338,38 @@ class MenuServiceTest {
     class SearchMenus {
 
         @Test
-        @DisplayName("일반 조회자는 숨김 메뉴를 제외한 검색 결과를 공개 필드로 반환받는다")
+        @DisplayName("일반 조회자는 숨김 메뉴를 제외한 검색 결과를 공개 필드로, 가게 이름을 포함해 반환받는다")
         void searchMenus_returnsPublicResponses_whenNotElevated() {
 
             MenuEntity visible = new MenuEntity(STORE_ID, "김치찌개", null, 8000);
+            Store store = Store.builder().storeId(STORE_ID).name("테스트분식").build();
 
             given(menuRepository.searchVisibleMenus(eq("김치"), any(Pageable.class)))
                     .willReturn(new PageImpl<>(List.of(visible)));
+            given(storeRepository.findAllById(List.of(STORE_ID))).willReturn(List.of(store));
 
-            Page<MenuView> result = menuService.searchMenus("김치", 0, 10, null, false);
+            Page<MenuSearchView> result = menuService.searchMenus("김치", 0, 10, null, false);
 
-            assertThat(result.getContent()).containsExactly(PublicMenuResponse.from(visible));
+            assertThat(result.getContent())
+                    .containsExactly(PublicMenuSearchResponse.from(visible, "테스트분식"));
         }
 
         @Test
-        @DisplayName("MANAGER/MASTER는 숨김 메뉴를 포함한 검색 결과를 전체 필드로 반환받는다")
+        @DisplayName("MANAGER/MASTER는 숨김 메뉴를 포함한 검색 결과를 전체 필드로, 가게 이름을 포함해 반환받는다")
         void searchMenus_returnsMenuResponses_whenElevated() {
 
             MenuEntity hidden = new MenuEntity(STORE_ID, "김치찌개", null, 8000);
             hidden.updateHidden(true);
+            Store store = Store.builder().storeId(STORE_ID).name("테스트분식").build();
 
             given(menuRepository.searchAllMenus(eq("김치"), any(Pageable.class)))
                     .willReturn(new PageImpl<>(List.of(hidden)));
+            given(storeRepository.findAllById(List.of(STORE_ID))).willReturn(List.of(store));
 
-            Page<MenuView> result = menuService.searchMenus("김치", 0, 10, null, true);
+            Page<MenuSearchView> result = menuService.searchMenus("김치", 0, 10, null, true);
 
-            assertThat(result.getContent()).containsExactly(MenuResponse.from(hidden));
+            assertThat(result.getContent())
+                    .containsExactly(MenuSearchResponse.from(hidden, "테스트분식"));
         }
 
         @Test

@@ -5,6 +5,7 @@ import com.delivery.domain.menu.dto.request.CreateMenuRequest;
 import com.delivery.domain.menu.dto.request.UpdateMenuRequest;
 import com.delivery.domain.menu.dto.request.UpdateMenuVisibilityRequest;
 import com.delivery.domain.menu.dto.response.MenuResponse;
+import com.delivery.domain.menu.dto.response.MenuSearchView;
 import com.delivery.domain.menu.dto.response.MenuView;
 import com.delivery.domain.menu.service.MenuService;
 import com.delivery.domain.user.entity.Role;
@@ -92,7 +93,7 @@ public class MenuController {
     // size는 10/30/50만 허용(그 외는 10으로 보정), 기본 정렬은 생성일 내림차순
     @Operation(summary = "메뉴 검색", description = "가게 구분 없이 이름으로 메뉴를 검색합니다.")
     @GetMapping("/api/v1/menus")
-    public ResponseEntity<RestApiResponse<Page<MenuView>>> searchMenus(
+    public ResponseEntity<RestApiResponse<Page<MenuSearchView>>> searchMenus(
             @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,

@@ -4,9 +4,12 @@ import com.delivery.domain.ai.exception.AiErrorCode;
 import com.delivery.domain.ai.exception.AiException;
 import com.delivery.domain.ai.service.AiService;
 import com.delivery.domain.menu.dto.response.MenuResponse;
+import com.delivery.domain.menu.dto.response.MenuSearchResponse;
+import com.delivery.domain.menu.dto.response.MenuSearchView;
 import com.delivery.domain.menu.dto.response.MenuSnapshot;
 import com.delivery.domain.menu.dto.response.MenuView;
 import com.delivery.domain.menu.dto.response.PublicMenuResponse;
+import com.delivery.domain.menu.dto.response.PublicMenuSearchResponse;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.menu.exception.MenuException;
@@ -14,7 +17,9 @@ import com.delivery.domain.menu.repository.MenuRepository;
 import com.delivery.domain.store.entity.Store;
 import com.delivery.domain.store.repository.StoreRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -128,7 +133,9 @@ public class MenuService {
     // 메뉴 횡단 검색 - 특정 가게에 속하지 않은 전체 메뉴 대상 이름 검색(플랫 API).
     // 여러 가게에 걸친 결과라 단건/목록 조회처럼 "그 가게 소유자" 개념이 성립하지 않으므로,
     // MANAGER/MASTER만 숨김 메뉴를 포함해 보고 그 외에는 전부 숨김 메뉴를 제외한다.
-    public Page<MenuView> searchMenus(
+    // Menu-Store는 여전히 비식별 관계(연관관계 매핑 없음)라 조인하지 않고, 결과에 나온
+    // storeId만 모아 배치 조회로 이름을 붙인다(검색 결과 페이지당 쿼리 1회 추가).
+    public Page<MenuSearchView> searchMenus(
             String name, int page, int size, String sort, boolean isElevatedRole) {
         String keyword = (name == null || name.isBlank()) ? null : name;
         Pageable pageable = createPageable(page, normalizePageSize(size), sort);
@@ -138,7 +145,27 @@ public class MenuService {
                         ? menuRepository.searchAllMenus(keyword, pageable)
                         : menuRepository.searchVisibleMenus(keyword, pageable);
 
-        return menus.map(menu -> (MenuView) toMenuView(menu, isElevatedRole));
+        Map<UUID, String> storeNames = findStoreNames(menus.getContent());
+
+        return menus.map(
+                menu ->
+                        (MenuSearchView)
+                                toMenuSearchView(
+                                        menu, storeNames.get(menu.getStoreId()), isElevatedRole));
+    }
+
+    // 참조하는 가게가 이미 삭제된(연결이 끊긴) 극히 드문 경우 storeName은 null로 둔다.
+    private Map<UUID, String> findStoreNames(List<MenuEntity> menus) {
+        List<UUID> storeIds = menus.stream().map(MenuEntity::getStoreId).distinct().toList();
+        return storeRepository.findAllById(storeIds).stream()
+                .collect(Collectors.toMap(Store::getStoreId, Store::getName));
+    }
+
+    private MenuSearchView toMenuSearchView(
+            MenuEntity menu, String storeName, boolean canViewHidden) {
+        return canViewHidden
+                ? MenuSearchResponse.from(menu, storeName)
+                : PublicMenuSearchResponse.from(menu, storeName);
     }
 
     // 요구사항: size는 10/30/50만 허용하고 그 외 값은 에러가 아니라 10으로 보정
