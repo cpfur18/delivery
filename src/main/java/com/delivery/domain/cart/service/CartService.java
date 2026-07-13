@@ -11,6 +11,7 @@ import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.menu.exception.MenuException;
 import com.delivery.domain.menu.repository.MenuRepository;
 import com.delivery.domain.menu.service.MenuService;
+import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.exception.BusinessException;
 import com.delivery.global.exception.GlobalErrorCode;
 import com.delivery.global.security.config.CustomUserDetails;
@@ -29,6 +30,7 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final MenuRepository menuRepository;
     private final MenuService menuService;
+    private final UserRepository userRepository;
 
     public CartResponse getMyCart(CustomUserDetails userDetails) {
         return cartRepository
@@ -39,6 +41,7 @@ public class CartService {
 
     @Transactional
     public CartResponse addCartItem(CustomUserDetails userDetails, UUID menuId, int quantity) {
+        lockUser(userDetails.getId());
         Cart cart = cartRepository.findByUserIdAndDeletedAtIsNull(userDetails.getId()).orElse(null);
         UUID storeId = cart != null ? cart.getStoreId() : getMenuStoreId(menuId);
         MenuSnapshot menuSnapshot = menuService.getOrderableMenu(menuId, storeId);
@@ -93,10 +96,15 @@ public class CartService {
 
     @Transactional
     public void clearMyCart(CustomUserDetails userDetails) {
+        lockUser(userDetails.getId());
         Cart cart =
                 cartRepository
                         .findByUserIdAndDeletedAtIsNull(userDetails.getId())
-                        .orElseThrow(() -> new BusinessException(GlobalErrorCode.NOT_FOUND));
+                        .orElse(null);
+
+        if (cart == null) {
+            return;
+        }
 
         String deletedBy = userDetails.getId() + "_" + userDetails.getUsername();
 
@@ -137,5 +145,11 @@ public class CartService {
                 .findByMenuIdAndDeletedAtIsNull(menuId)
                 .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_NOT_FOUND))
                 .getStoreId();
+    }
+
+    private void lockUser(Long userId) {
+        userRepository
+                .findByIdForUpdate(userId)
+                .orElseThrow(() -> new BusinessException(GlobalErrorCode.NOT_FOUND));
     }
 }
