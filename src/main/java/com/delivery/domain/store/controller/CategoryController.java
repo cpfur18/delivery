@@ -31,13 +31,11 @@ public class CategoryController {
                 .body(RestApiResponse.success(HttpStatus.CREATED, "카테고리 등록 성공", response));
     }
 
-
     @GetMapping
     public ResponseEntity<RestApiResponse<List<CategoryResponse>>> getCategories() {
         List<CategoryResponse> response = categoryService.getCategories();
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "조회 성공", response));
     }
-
 
     @PreAuthorize("hasAnyRole('MANAGER', 'MASTER')")
     @PutMapping("/{categoryId}")
@@ -53,7 +51,7 @@ public class CategoryController {
     public ResponseEntity<RestApiResponse<Void>> deleteCategory(
             @PathVariable UUID categoryId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        categoryService.deleteCategory(categoryId, userDetails.getUsername());
+        categoryService.deleteCategory(categoryId, userDetails.getId() + "_" + userDetails.getUsername());
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "카테고리 삭제 성공", null));
     }
 }

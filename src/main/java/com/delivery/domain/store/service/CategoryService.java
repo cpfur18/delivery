@@ -6,6 +6,7 @@ import com.delivery.domain.store.entity.Category;
 import com.delivery.domain.store.repository.CategoryRepository;
 import com.delivery.domain.store.exception.StoreErrorCode;
 import com.delivery.domain.store.exception.StoreException;
+import com.delivery.domain.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final StoreRepository storeRepository;
 
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
@@ -46,7 +48,7 @@ public class CategoryService {
         Category category = categoryRepository.findByCategoryIdAndDeletedAtIsNull(categoryId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
-        if (categoryRepository.existsByNameAndDeletedAtIsNull(request.name())) {
+        if (categoryRepository.existsByNameAndDeletedAtIsNullAndCategoryIdNot(request.name(), categoryId)) {
             throw new StoreException(StoreErrorCode.DUPLICATE_CATEGORY);
         }
 
@@ -59,6 +61,9 @@ public class CategoryService {
         Category category = categoryRepository.findByCategoryIdAndDeletedAtIsNull(categoryId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
+        if (storeRepository.existsByCategoryIdAndDeletedAtIsNull(categoryId)) {
+            throw new StoreException(StoreErrorCode.CATEGORY_IN_USE);
+        }
         category.delete(deletedBy);
     }
 

@@ -51,7 +51,7 @@ public class RegionController {
     public ResponseEntity<RestApiResponse<Void>> deleteRegion(
             @PathVariable UUID regionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        regionService.deleteRegion(regionId, userDetails.getUsername());
+        regionService.deleteRegion(regionId, userDetails.getId() + "_" + userDetails.getUsername());
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "지역 삭제 성공", null));
     }
 }

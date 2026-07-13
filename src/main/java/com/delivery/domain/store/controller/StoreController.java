@@ -60,7 +60,8 @@ public class StoreController {
             @Valid @RequestBody StoreRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+        String role = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER")) ? "ROLE_OWNER" : "";
         StoreResponse response = storeService.updateStore(storeId, userId, role, request);
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "가게 수정 성공", response));
     }
@@ -73,7 +74,8 @@ public class StoreController {
             @RequestBody StoreStatusRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+        String role = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER")) ? "ROLE_OWNER" : "";
         StoreResponse response = storeService.updateStoreStatus(storeId, userId, role, request.isOpen());
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "영업상태 변경 성공", response));
     }
@@ -85,8 +87,9 @@ public class StoreController {
             @PathVariable UUID storeId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        String role = userDetails.getAuthorities().iterator().next().getAuthority();
-        storeService.deleteStore(storeId, userId, role);
+        String role = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER")) ? "ROLE_OWNER" : "";
+        storeService.deleteStore(storeId, userId, role, userId + "_" + userDetails.getUsername());
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "가게 삭제 성공", null));
     }
 }
