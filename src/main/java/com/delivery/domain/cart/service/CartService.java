@@ -41,23 +41,28 @@ public class CartService {
         Cart cart =
                 cartRepository
                         .findByUserIdAndDeletedAtIsNull(userDetails.getId())
-                        .orElseGet(() -> cartRepository.save(Cart.create(userDetails.getId(), menu.getStoreId())));
+                        .orElseGet(
+                                () ->
+                                        cartRepository.save(
+                                                Cart.create(userDetails.getId(), menu.getStoreId())));
 
         validateStoreConsistency(cart, menu.getStoreId());
 
         CartItem cartItem =
                 cartItemRepository
                         .findByCartAndMenuIdAndDeletedAtIsNull(cart, menuId)
-                        .map(existingItem -> {
-                            existingItem.addQuantity(quantity);
-                            return existingItem;
-                        })
+                        .map(
+                                existingItem -> {
+                                    existingItem.addQuantity(quantity);
+                                    return existingItem;
+                                })
                         .orElseGet(
                                 () ->
                                         cartItemRepository.save(
                                                 CartItem.create(
                                                         cart,
                                                         menuId,
+                                                        menu.getName(),
                                                         quantity,
                                                         menu.getPrice())));
 
@@ -83,6 +88,22 @@ public class CartService {
         if (cartItemRepository.countByCartAndDeletedAtIsNull(cart) == 0) {
             cart.delete(deletedBy);
         }
+    }
+
+    @Transactional
+    public void clearMyCart(CustomUserDetails userDetails) {
+        Cart cart =
+                cartRepository
+                        .findByUserIdAndDeletedAtIsNull(userDetails.getId())
+                        .orElseThrow(() -> new BusinessException(GlobalErrorCode.NOT_FOUND));
+
+        String deletedBy = userDetails.getId() + "_" + userDetails.getUsername();
+
+        for (CartItem cartItem : cartItemRepository.findAllByCartAndDeletedAtIsNull(cart)) {
+            cartItem.delete(deletedBy);
+        }
+
+        cart.delete(deletedBy);
     }
 
     private CartResponse toCartResponse(Cart cart) {

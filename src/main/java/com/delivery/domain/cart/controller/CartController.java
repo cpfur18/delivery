@@ -104,4 +104,18 @@ public class CartController {
         cartService.deleteCartItem(userDetails, cartItemId);
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "장바구니 항목이 삭제되었습니다.", null));
     }
+
+    @DeleteMapping("/me/items")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @Operation(summary = "장바구니 비우기", description = "CUSTOMER가 자신의 장바구니 항목 전체를 비웁니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "장바구니 비우기 성공"),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content(schema = @Schema(hidden = true))),
+        @ApiResponse(responseCode = "404", description = "장바구니를 찾을 수 없음", content = @Content(schema = @Schema(hidden = true)))
+    })
+    public ResponseEntity<RestApiResponse<Void>> clearMyCart(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        cartService.clearMyCart(userDetails);
+        return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "장바구니를 비웠습니다.", null));
+    }
 }

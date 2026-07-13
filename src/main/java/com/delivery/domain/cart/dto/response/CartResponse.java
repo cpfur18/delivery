@@ -21,11 +21,11 @@ public record CartResponse(
         @Schema(description = "총 수량", example = "2")
         int totalQuantity,
         @Schema(description = "총 금액", example = "24000")
-        long totalAmount) {
+        long totalPrice) {
 
     public static CartResponse from(Cart cart, List<CartItemResponse> items) {
         int totalQuantity = items.stream().mapToInt(CartItemResponse::quantity).sum();
-        long totalAmount = items.stream().mapToLong(CartItemResponse::subtotalPrice).sum();
+        long totalPrice = items.stream().mapToLong(CartItemResponse::subtotalPrice).sum();
 
         return new CartResponse(
                 cart.getCartId(),
@@ -34,7 +34,7 @@ public record CartResponse(
                 cart.getCartStatus(),
                 items,
                 totalQuantity,
-                totalAmount);
+                totalPrice);
     }
 
     public static CartResponse empty(Long userId) {

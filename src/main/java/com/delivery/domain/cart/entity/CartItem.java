@@ -37,16 +37,21 @@ public class CartItem extends BaseEntity {
     @Column(name = "menu_id", nullable = false)
     private UUID menuId;
 
+    @Column(name = "menu_name_snapshot", nullable = false, length = 100)
+    private String menuNameSnapshot;
+
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
     @Column(name = "menu_price_snapshot", nullable = false)
     private Long menuPriceSnapshot;
 
-    public static CartItem create(Cart cart, UUID menuId, int quantity, long menuPriceSnapshot) {
+    public static CartItem create(
+            Cart cart, UUID menuId, String menuNameSnapshot, int quantity, long menuPriceSnapshot) {
         return CartItem.builder()
                 .cart(cart)
                 .menuId(menuId)
+                .menuNameSnapshot(menuNameSnapshot)
                 .quantity(quantity)
                 .menuPriceSnapshot(menuPriceSnapshot)
                 .build();
