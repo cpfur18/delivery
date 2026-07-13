@@ -52,6 +52,7 @@ public class StoreController {
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "조회 성공", response));
     }
 
+    //가게 수정
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
     @PutMapping("/{storeId}")
     public ResponseEntity<RestApiResponse<StoreResponse>> updateStore(
@@ -59,10 +60,12 @@ public class StoreController {
             @Valid @RequestBody StoreRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        StoreResponse response = storeService.updateStore(storeId, userId, request);
+        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+        StoreResponse response = storeService.updateStore(storeId, userId, role, request);
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "가게 수정 성공", response));
     }
 
+    // 영업상태 변경
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
     @PatchMapping("/{storeId}/status")
     public ResponseEntity<RestApiResponse<StoreResponse>> updateStoreStatus(
@@ -70,17 +73,20 @@ public class StoreController {
             @RequestBody StoreStatusRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        StoreResponse response = storeService.updateStoreStatus(storeId, userId, request.isOpen());
+        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+        StoreResponse response = storeService.updateStoreStatus(storeId, userId, role, request.isOpen());
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "영업상태 변경 성공", response));
     }
 
+    // 가게 삭제
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
     @DeleteMapping("/{storeId}")
     public ResponseEntity<RestApiResponse<Void>> deleteStore(
             @PathVariable UUID storeId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
-        storeService.deleteStore(storeId, userId);
+        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+        storeService.deleteStore(storeId, userId, role);
         return ResponseEntity.ok(RestApiResponse.success(HttpStatus.OK, "가게 삭제 성공", null));
     }
 }

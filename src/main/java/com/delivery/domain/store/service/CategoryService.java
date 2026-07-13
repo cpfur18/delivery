@@ -23,7 +23,7 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
-        if (categoryRepository.existsByName(request.name())) {
+        if (categoryRepository.existsByNameAndDeletedAtIsNull(request.name())) {
             throw new StoreException(StoreErrorCode.DUPLICATE_CATEGORY);
         }
 
@@ -46,7 +46,7 @@ public class CategoryService {
         Category category = categoryRepository.findByCategoryIdAndDeletedAtIsNull(categoryId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
-        if (categoryRepository.existsByName(request.name())) {
+        if (categoryRepository.existsByNameAndDeletedAtIsNull(request.name())) {
             throw new StoreException(StoreErrorCode.DUPLICATE_CATEGORY);
         }
 

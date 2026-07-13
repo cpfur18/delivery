@@ -29,7 +29,7 @@ public class Store extends BaseEntity {
     @Column(name = "region_id", nullable = false)
     private UUID regionId;
 
-    @Column(name = "name", nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 50, unique = true)
     private String name;
 
     @Column(name = "address", nullable = false, length = 255)

@@ -1,3 +1,6 @@
 package com.delivery.domain.menu.dto.request;
 
-public record UpdateMenuVisibilityRequest(boolean hidden) {}
+import jakarta.validation.constraints.NotNull;
+
+public record UpdateMenuVisibilityRequest(
+        @NotNull(message = "MENU_HIDDEN_STATUS_REQUIRED") Boolean hidden) {}
