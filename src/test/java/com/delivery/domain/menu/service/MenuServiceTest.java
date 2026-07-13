@@ -127,7 +127,7 @@ class MenuServiceTest {
         }
 
         @Test
-        @DisplayName("가게가 존재하지 않으면 MENU_STORE_NOT_FOUND 예외를 던진다")
+        @DisplayName("가게가 존재하지 않으면 STORE_NOT_FOUND 예외를 던진다")
         void createMenu_throws_whenStoreNotFound() {
 
             given(storeRepository.findByStoreIdAndDeletedAtIsNull(STORE_ID))
@@ -140,7 +140,7 @@ class MenuServiceTest {
                                             STORE_ID, "김치찌개", "설명", 8000, false, null, OWNER_ID,
                                             false))
                     .extracting(BusinessException::getErrorCode)
-                    .isEqualTo(MenuErrorCode.MENU_STORE_NOT_FOUND);
+                    .isEqualTo(MenuErrorCode.STORE_NOT_FOUND);
 
             verifyNoInteractions(aiService, menuRepository, transactionTemplate);
         }

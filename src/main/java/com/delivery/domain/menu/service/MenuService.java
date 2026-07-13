@@ -203,7 +203,7 @@ public class MenuService {
         Store store =
                 storeRepository
                         .findByStoreIdAndDeletedAtIsNull(storeId)
-                        .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_STORE_NOT_FOUND));
+                        .orElseThrow(() -> new MenuException(MenuErrorCode.STORE_NOT_FOUND));
 
         if (!bypassOwnership && !store.getUserId().equals(requesterId)) {
             throw new MenuException(MenuErrorCode.NOT_MENU_STORE_OWNER);
