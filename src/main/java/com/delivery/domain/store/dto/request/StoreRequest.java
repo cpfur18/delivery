@@ -4,28 +4,28 @@ import jakarta.validation.constraints.*;
 import java.util.UUID;
 
 public record StoreRequest(
-        @NotNull
+        @NotNull(message = "REQUIRED_VALUE")
         UUID categoryId,
 
-        @NotNull
+        @NotNull(message = "REQUIRED_VALUE")
         UUID regionId,
 
-        @NotBlank
-        @Size(min = 1, max = 50)
+        @NotBlank(message = "REQUIRED_VALUE")
+        @Size(min = 1, max = 50, message = "BAD_REQUEST")
         String name,
 
-        @NotBlank
-        @Size(max = 255)
+        @NotBlank(message = "REQUIRED_VALUE")
+        @Size(max = 255, message = "BAD_REQUEST")
         String address,
 
-        @NotBlank
-        @Size(max = 20)
+        @NotBlank(message = "REQUIRED_VALUE")
+        @Size(max = 20, message = "BAD_REQUEST")
         String phone,
 
-        @Size(max = 500)
+        @Size(max = 500, message = "BAD_REQUEST")
         String description,
 
-        @NotNull
-        @Min(0)
+        @NotNull(message = "REQUIRED_VALUE")
+        @Min(value = 0, message = "BAD_REQUEST")
         Integer minOrderAmount
 ) {}

@@ -5,13 +5,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record RegionRequest(
-        @NotBlank
-        @Size(min = 1, max = 100)
+        @NotBlank(message = "REQUIRED_VALUE")
+        @Size(min = 1, max = 100, message = "BAD_REQUEST")
         String name,
 
-        @NotNull
+        @NotNull(message = "REQUIRED_VALUE")
         Double latitude,
 
-        @NotNull
+        @NotNull(message = "REQUIRED_VALUE")
         Double longitude
 ) {}
