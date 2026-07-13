@@ -1,5 +1,10 @@
 package com.delivery.domain.order.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.repository.MenuRepository;
 import com.delivery.domain.order.dto.request.OrderCreateRequest;
@@ -11,6 +16,9 @@ import com.delivery.domain.order.exception.OrderException;
 import com.delivery.domain.order.repository.OrderRepository;
 import com.delivery.domain.store.entity.Store;
 import com.delivery.domain.store.repository.StoreRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,29 +28,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceMenuValidationTest {
     // 주문 생성 중 메뉴 검증 로직 테스트
-    @Mock
-    private OrderRepository orderRepository;
+    @Mock private OrderRepository orderRepository;
 
-    @Mock
-    private StoreRepository storeRepository;
+    @Mock private StoreRepository storeRepository;
 
-    @Mock
-    private MenuRepository menuRepository;
+    @Mock private MenuRepository menuRepository;
 
-    @InjectMocks
-    private OrderService orderService;
+    @InjectMocks private OrderService orderService;
 
     private UUID storeId;
     private UUID menuId;
@@ -82,13 +77,10 @@ public class OrderServiceMenuValidationTest {
     void createOrder_menuNotFound() {
 
         // given
-        when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
-                .thenReturn(Optional.empty());
+        when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() ->
-                orderService.createOrder(request, currentUserId)
-        )
+        assertThatThrownBy(() -> orderService.createOrder(request, currentUserId))
                 .isInstanceOf(OrderException.class)
                 .hasMessage(OrderErrorCode.MENU_NOT_FOUND.getMessage());
 
@@ -104,16 +96,13 @@ public class OrderServiceMenuValidationTest {
         // given
         UUID otherStoreId = UUID.randomUUID();
 
-        when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
-                .thenReturn(Optional.of(menu));
+        when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.of(menu));
 
         // 조회된 메뉴는 요청한 가게가 아닌 다른 가게 소속
         when(menu.getStoreId()).thenReturn(otherStoreId);
 
         // when & then
-        assertThatThrownBy(() ->
-                orderService.createOrder(request, currentUserId)
-        )
+        assertThatThrownBy(() -> orderService.createOrder(request, currentUserId))
                 .isInstanceOf(OrderException.class)
                 .hasMessage(OrderErrorCode.MENU_STORE_MISMATCH.getMessage());
 
@@ -126,17 +115,14 @@ public class OrderServiceMenuValidationTest {
     void createOrder_hiddenMenu() {
 
         // given
-        when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
-                .thenReturn(Optional.of(menu));
+        when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.of(menu));
 
         // 요청한 가게의 메뉴이지만 숨김 처리된 상태
         when(menu.getStoreId()).thenReturn(storeId);
         when(menu.isHidden()).thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() ->
-                orderService.createOrder(request, currentUserId)
-        )
+        assertThatThrownBy(() -> orderService.createOrder(request, currentUserId))
                 .isInstanceOf(OrderException.class)
                 .hasMessage(OrderErrorCode.MENU_NOT_AVAILABLE.getMessage());
 
@@ -149,8 +135,7 @@ public class OrderServiceMenuValidationTest {
     void createOrder_invalidMenuPrice() {
 
         // given
-        when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
-                .thenReturn(Optional.of(menu));
+        when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.of(menu));
 
         when(menu.getStoreId()).thenReturn(storeId);
 
@@ -159,9 +144,7 @@ public class OrderServiceMenuValidationTest {
         when(menu.getPrice()).thenReturn(0);
 
         // when & then
-        assertThatThrownBy(() ->
-                orderService.createOrder(request, currentUserId)
-        )
+        assertThatThrownBy(() -> orderService.createOrder(request, currentUserId))
                 .isInstanceOf(OrderException.class)
                 .hasMessage(OrderErrorCode.INVALID_MENU_PRICE.getMessage());
 
@@ -198,8 +181,7 @@ public class OrderServiceMenuValidationTest {
         orderService.createOrder(successRequest, currentUserId);
 
         // then
-        ArgumentCaptor<Order> orderCaptor =
-                ArgumentCaptor.forClass(Order.class);
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
 
         verify(orderRepository).save(orderCaptor.capture());
 
@@ -211,14 +193,12 @@ public class OrderServiceMenuValidationTest {
         assertThat(savedOrder.getDeliveryAddress()).isEqualTo("서울시 강남구");
 
         // 총 주문 금액 = 메뉴 가격 × 수량
-        assertThat(savedOrder.getTotalPrice())
-                .isEqualTo(24_000);
+        assertThat(savedOrder.getTotalPrice()).isEqualTo(24_000);
 
         // 주문 상세 확인
         assertThat(savedOrder.getOrderItems()).hasSize(1);
 
-        OrderItem savedOrderItem =
-                savedOrder.getOrderItems().get(0);
+        OrderItem savedOrderItem = savedOrder.getOrderItems().get(0);
 
         assertThat(savedOrderItem.getMenuId()).isEqualTo(menuId);
         assertThat(savedOrderItem.getMenuName()).isEqualTo("불고기 피자");
@@ -227,24 +207,12 @@ public class OrderServiceMenuValidationTest {
         assertThat(savedOrderItem.getSubtotalPrice()).isEqualTo(24_000);
 
         // Order.addOrderItem()에서 양방향 연관관계가 연결됐는지 확인
-        assertThat(savedOrderItem.getOrder())
-                .isSameAs(savedOrder);
-
+        assertThat(savedOrderItem.getOrder()).isSameAs(savedOrder);
     }
 
     // 수량만 다르게 주문 요청을 만들기 위한 테스트 헬퍼 메서드
     private OrderCreateRequest createOrderRequest(int quantity) {
         return new OrderCreateRequest(
-                storeId,
-                "서울시 강남구",
-                List.of(
-                        new OrderItemCreateRequest(
-                                menuId,
-                                quantity
-                        )
-                )
-        );
+                storeId, "서울시 강남구", List.of(new OrderItemCreateRequest(menuId, quantity)));
     }
-
-
 }

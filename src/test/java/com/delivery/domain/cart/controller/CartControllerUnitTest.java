@@ -2,7 +2,6 @@ package com.delivery.domain.cart.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -52,9 +51,11 @@ class CartControllerUnitTest {
     @DisplayName("returns common wrapper for my cart response")
     void getMyCart_success_returns_wrapper() throws Exception {
         CartItemResponse item =
-                new CartItemResponse(UUID.randomUUID(), UUID.randomUUID(), "Kimchi", 2, 12000L, 24000L);
+                new CartItemResponse(
+                        UUID.randomUUID(), UUID.randomUUID(), "Kimchi", 2, 12000L, 24000L);
         CartResponse response =
-                new CartResponse(UUID.randomUUID(), 1L, UUID.randomUUID(), null, List.of(item), 2, 24000L);
+                new CartResponse(
+                        UUID.randomUUID(), 1L, UUID.randomUUID(), null, List.of(item), 2, 24000L);
 
         when(cartService.getMyCart(any(CustomUserDetails.class))).thenReturn(response);
 
@@ -74,7 +75,10 @@ class CartControllerUnitTest {
         mockMvc.perform(
                         post("/api/v1/carts/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"menuId\":\"" + UUID.randomUUID() + "\",\"quantity\":0}"))
+                                .content(
+                                        "{\"menuId\":\""
+                                                + UUID.randomUUID()
+                                                + "\",\"quantity\":0}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value(400))
@@ -88,7 +92,7 @@ class CartControllerUnitTest {
         UUID cartItemId = UUID.randomUUID();
         CartResponse response = new CartResponse(null, 1L, null, null, List.of(), 3, 21000L);
 
-        when(cartService.updateCartItem(isNull(), eq(cartItemId), eq(3))).thenReturn(response);
+        when(cartService.updateCartItem(any(), eq(cartItemId), eq(3))).thenReturn(response);
 
         mockMvc.perform(
                         patch("/api/v1/carts/items/{cartItemId}", cartItemId)

@@ -16,8 +16,7 @@ public record StoreResponse(
         Boolean isOpen,
         Double averageRating,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
-) {
+        LocalDateTime updatedAt) {
     public static StoreResponse from(Store store) {
         return new StoreResponse(
                 store.getStoreId(),
@@ -31,7 +30,6 @@ public record StoreResponse(
                 store.getIsOpen(),
                 store.getAverageRating(),
                 store.getCreatedAt(),
-                store.getUpdatedAt()
-        );
+                store.getUpdatedAt());
     }
 }

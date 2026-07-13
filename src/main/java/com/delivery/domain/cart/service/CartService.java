@@ -44,7 +44,8 @@ public class CartService {
                         .orElseGet(
                                 () ->
                                         cartRepository.save(
-                                                Cart.create(userDetails.getId(), menu.getStoreId())));
+                                                Cart.create(
+                                                        userDetails.getId(), menu.getStoreId())));
 
         validateStoreConsistency(cart, menu.getStoreId());
 
