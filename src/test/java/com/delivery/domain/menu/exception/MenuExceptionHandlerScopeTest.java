@@ -4,13 +4,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.delivery.domain.auth.controller.AuthController;
-import com.delivery.domain.auth.dto.request.SignUpRequest;
-import com.delivery.domain.auth.service.AuthService;
 import com.delivery.domain.menu.controller.MenuController;
 import com.delivery.domain.menu.dto.request.CreateMenuRequest;
 import com.delivery.domain.menu.service.MenuService;
-import com.delivery.domain.user.enums.Role;
+import com.delivery.domain.user.controller.AuthController;
+import com.delivery.domain.user.dto.request.SignUpRequest;
+import com.delivery.domain.user.entity.Role;
+import com.delivery.domain.user.service.AuthService;
+import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.jwt.JwtRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +30,9 @@ import org.springframework.test.web.servlet.MockMvc;
 // 적용되고 다른 컨트롤러(AuthController)의 예외 처리는 그대로 GlobalExceptionHandler가
 // 담당하는지 확인하는 테스트. 두 컨트롤러를 한 슬라이스에 같이 올려야 스코프 누수 여부를
 // 검증할 수 있어서 별도 파일로 분리함.
+// ErrorCodeRegistry를 실제 빈으로 가져와야 AuthController 쪽 검증(INVALID_USERNAME)이
+// GlobalExceptionHandler의 레지스트리 조회로 정상 해석된다(모킹하면 null만 반환됨).
+@Import(ErrorCodeRegistry.class)
 @WebMvcTest(controllers = {MenuController.class, AuthController.class})
 @AutoConfigureMockMvc(addFilters = false)
 class MenuExceptionHandlerScopeTest {

@@ -3,8 +3,11 @@ package com.delivery.domain.menu.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.delivery.common.util.CryptoConverter;
+import com.delivery.common.util.SsnEncryptor;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.global.config.CustomAuditorAware;
+import com.delivery.global.config.EncryptConfig;
 import com.delivery.global.config.JpaAuditingConfig;
 import com.delivery.testconfig.AbstractIntegrationTest;
 import java.util.List;
@@ -22,8 +25,18 @@ import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.AuditorAware;
 
+// @DataJpaTest는 User/Address 엔티티가 쓰는 CryptoConverter(전화번호/주소 암호화)도
+// 같은 영속성 유닛 메타모델에 포함시키려 하는데, 이 컨버터가 필요로 하는
+// SsnEncryptor/AesBytesEncryptor 빈은 슬라이스에 기본으로 안 실려서 명시적으로 가져와야 함
+// (Menu 도메인과 무관한 의존성이지만, 같은 EntityManagerFactory를 쓰기 때문에 필요함).
 @DataJpaTest
-@Import({JpaAuditingConfig.class, MenuRepositoryIntegrationTest.TestAuditorConfig.class})
+@Import({
+    JpaAuditingConfig.class,
+    MenuRepositoryIntegrationTest.TestAuditorConfig.class,
+    EncryptConfig.class,
+    SsnEncryptor.class,
+    CryptoConverter.class
+})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class MenuRepositoryIntegrationTest extends AbstractIntegrationTest {
 
