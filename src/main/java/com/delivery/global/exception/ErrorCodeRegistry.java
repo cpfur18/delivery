@@ -1,5 +1,7 @@
 package com.delivery.global.exception;
 
+import com.delivery.domain.ai.exception.AiErrorCode;
+import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.user.exception.AuthErrorCode;
 import com.delivery.domain.user.exception.UserErrorCode;
 import java.util.HashMap;
@@ -14,6 +16,8 @@ public class ErrorCodeRegistry {
         register(GlobalErrorCode.values());
         register(UserErrorCode.values());
         register(AuthErrorCode.values());
+        register(MenuErrorCode.values());
+        register(AiErrorCode.values());
     }
 
     private void register(ErrorCode[] codes) {
