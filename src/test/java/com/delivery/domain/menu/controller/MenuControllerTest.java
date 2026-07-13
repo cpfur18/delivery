@@ -21,6 +21,7 @@ import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.menu.exception.MenuException;
 import com.delivery.domain.menu.service.MenuService;
+import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.jwt.JwtRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,6 +41,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+// GlobalExceptionHandler가 ErrorCodeRegistry를 생성자 주입받는데 @WebMvcTest 슬라이스엔
+// 자동으로 안 실려서 명시적으로 가져옴 - 실제 Menu 검증 실패는 MenuExceptionHandler가
+// 먼저 가로채므로(HIGHEST_PRECEDENCE) 이 레지스트리 값 자체는 테스트 결과에 영향 없음.
+@Import(ErrorCodeRegistry.class)
 @WebMvcTest(MenuController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class MenuControllerTest {

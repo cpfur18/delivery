@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum AiErrorCode implements ErrorCode {
     // 400 Bad Request
+    AI_GENERATION_REQUIRED(HttpStatus.BAD_REQUEST, "AI 생성 여부 값은 필수입니다."),
     AI_PROMPT_REQUIRED(HttpStatus.BAD_REQUEST, "AI 설명 생성 시 프롬프트는 필수입니다."),
     AI_PROMPT_TOO_LONG(HttpStatus.BAD_REQUEST, "프롬프트는 200자 이하로 입력해주세요."),
 

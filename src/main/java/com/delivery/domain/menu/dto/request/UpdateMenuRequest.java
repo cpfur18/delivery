@@ -5,4 +5,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record UpdateMenuRequest(
-        @NotBlank @Size(max = 100) String name, String description, @Positive int price) {}
+        @NotBlank(message = "INVALID_MENU_NAME") @Size(max = 100, message = "INVALID_MENU_NAME")
+                String name,
+        String description,
+        @Positive(message = "INVALID_MENU_PRICE") int price) {}
