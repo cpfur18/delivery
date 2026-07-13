@@ -231,7 +231,7 @@ class PaymentServiceUnitTest {
         void getMyPayments_fail_when_page_request_is_invalid() {
             CustomUserDetails userDetails = createUserDetails(1L, Set.of(Role.CUSTOMER));
 
-            assertThatThrownBy(() -> paymentService.getMyPayments(userDetails, -1, 10, null))
+            assertThatThrownBy(() -> paymentService.getMyPayments(userDetails, -1, 0, null))
                     .isInstanceOf(BusinessException.class);
 
             verify(paymentRepository, never()).findByUserId(any(), any(Pageable.class));
@@ -261,14 +261,37 @@ class PaymentServiceUnitTest {
             when(paymentRepository.findByUserId(eq(1L), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of()));
 
-            paymentService.getMyPayments(userDetails, 0, 11, null);
+            paymentService.getMyPayments(userDetails, 0, 100, null);
 
             verify(paymentRepository)
                     .findByUserId(
                             eq(1L),
                             argThat(
                                     pageable ->
-                                            pageable.getPageSize() == 30
+                                            pageable.getPageSize() == 50
+                                                    && "paidAt: DESC"
+                                                            .equals(
+                                                                    pageable
+                                                                            .getSort()
+                                                                            .toString())));
+        }
+
+        @Test
+        @DisplayName("?섏씠吏 ?ш린媛?0 ?댄븯硫?10?쇰줈 蹂댁젙?쒕떎")
+        void getMyPayments_normalizes_non_positive_page_size_to_ten() {
+            CustomUserDetails userDetails = createUserDetails(1L, Set.of(Role.CUSTOMER));
+
+            when(paymentRepository.findByUserId(eq(1L), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            paymentService.getMyPayments(userDetails, 0, 0, null);
+
+            verify(paymentRepository)
+                    .findByUserId(
+                            eq(1L),
+                            argThat(
+                                    pageable ->
+                                            pageable.getPageSize() == 10
                                                     && "paidAt: DESC"
                                                             .equals(
                                                                     pageable
@@ -356,11 +379,7 @@ class PaymentServiceUnitTest {
                             argThat(
                                     pageable ->
                                             pageable.getPageSize() == 50
-                                                    && "paidAt: DESC"
-                                                            .equals(
-                                                                    pageable
-                                                                            .getSort()
-                                                                            .toString())));
+                                                    && pageable.getSort().isUnsorted()));
         }
     }
 

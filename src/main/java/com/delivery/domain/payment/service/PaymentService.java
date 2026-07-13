@@ -81,7 +81,7 @@ public class PaymentService {
         validatePageRequest(page, size);
         validateStoreAccess(storeId, userDetail);
 
-        Pageable pageable = createPageable(page, normalizePageSize(size));
+        Pageable pageable = createNativePageable(page, normalizePageSize(size));
         Page<PaymentResponse> payments =
                 (status == null
                                 ? paymentRepository.findByStoreId(storeId, pageable)
@@ -117,6 +117,10 @@ public class PaymentService {
 
     private Pageable createPageable(int page, int size) {
         return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "paidAt"));
+    }
+
+    private Pageable createNativePageable(int page, int size) {
+        return PageRequest.of(page, size);
     }
 
     private Order getOrderOrThrow(UUID orderId) {
@@ -201,7 +205,7 @@ public class PaymentService {
     }
 
     private void validatePageRequest(int page, int size) {
-        if (page < 0 || size < 1) {
+        if (page < 0) {
             throw new BusinessException(GlobalErrorCode.INVALID_PAGE_REQUEST);
         }
     }
@@ -215,11 +219,7 @@ public class PaymentService {
             return 30;
         }
 
-        if (size <= 50) {
-            return 50;
-        }
-
-        return DEFAULT_PAGE_SIZE;
+        return 50;
     }
 
     private boolean hasRole(CustomUserDetails userDetail, Role role) {
