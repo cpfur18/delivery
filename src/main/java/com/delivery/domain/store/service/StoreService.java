@@ -72,13 +72,16 @@ public class StoreService {
 
     // 가게 수정
     @Transactional
-    public StoreResponse updateStore(UUID storeId, Long userId, StoreRequest request) {
+    public StoreResponse updateStore(UUID storeId, Long userId, String role, StoreRequest request) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
+        if (role.equals("ROLE_OWNER") && !store.getUserId().equals(userId)) {
+            throw new StoreException(StoreErrorCode.STORE_ACCESS_DENIED);
+        }
+
         categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
-
         regionRepository.findById(request.regionId())
                 .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
@@ -88,9 +91,13 @@ public class StoreService {
 
     // 영업상태 변경
     @Transactional
-    public StoreResponse updateStoreStatus(UUID storeId, Long userId, Boolean isOpen) {
+    public StoreResponse updateStoreStatus(UUID storeId, Long userId, String role, Boolean isOpen) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
+
+        if (role.equals("ROLE_OWNER") && !store.getUserId().equals(userId)) {
+            throw new StoreException(StoreErrorCode.STORE_ACCESS_DENIED);
+        }
 
         store.updateStatus(isOpen);
         return StoreResponse.from(store);
@@ -98,9 +105,13 @@ public class StoreService {
 
     // 가게 삭제 (Soft Delete)
     @Transactional
-    public void deleteStore(UUID storeId, Long userId) {
+    public void deleteStore(UUID storeId, Long userId, String role) {
         Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
+
+        if (role.equals("ROLE_OWNER") && !store.getUserId().equals(userId)) {
+            throw new StoreException(StoreErrorCode.STORE_ACCESS_DENIED);
+        }
 
         store.delete(userId.toString());
     }
