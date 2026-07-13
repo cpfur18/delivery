@@ -23,6 +23,9 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
                            @Param("name") String name,
                            Pageable pageable);
 
-    //가게 중복 등록
     boolean existsByUserIdAndNameAndRegionIdAndDeletedAtIsNull(Long userId, String name, UUID regionId);
+
+    boolean existsByCategoryIdAndDeletedAtIsNull(UUID categoryId);
+
+    boolean existsByRegionIdAndDeletedAtIsNull(UUID regionId);
 }

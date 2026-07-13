@@ -8,7 +8,7 @@ import org.hibernate.annotations.UuidGenerator;
 import java.util.UUID;
 
 @Entity
-@Table(name = "p_store")
+@Table(name = "p_store", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name", "region_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -29,7 +29,7 @@ public class Store extends BaseEntity {
     @Column(name = "region_id", nullable = false)
     private UUID regionId;
 
-    @Column(name = "name", nullable = false, length = 50, unique = true)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
     @Column(name = "address", nullable = false, length = 255)

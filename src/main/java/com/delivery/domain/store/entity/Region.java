@@ -20,7 +20,7 @@ public class Region extends BaseEntity {
     @Column(name = "region_id")
     private UUID regionId;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100, unique = true)
     private String name;
 
     @Column(name = "latitude")
@@ -28,6 +28,10 @@ public class Region extends BaseEntity {
 
     @Column(name = "longitude")
     private Double longitude;
+
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
 
     public void update(String name, Double latitude, Double longitude) {
         this.name = name;

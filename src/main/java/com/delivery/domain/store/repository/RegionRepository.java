@@ -9,6 +9,7 @@ import java.util.UUID;
 
 public interface RegionRepository extends JpaRepository<Region, UUID> {
     boolean existsByNameAndDeletedAtIsNull(String name);
+    boolean existsByNameAndDeletedAtIsNullAndRegionIdNot(String name, UUID regionId);
     List<Region> findAllByDeletedAtIsNull();
     Optional<Region> findByRegionIdAndDeletedAtIsNull(UUID regionId);
 }
