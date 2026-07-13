@@ -1,3 +1,5 @@
 package com.delivery.domain.store.dto.request;
 
-public record StoreStatusRequest(Boolean isOpen) {}
+import jakarta.validation.constraints.NotNull;
+
+public record StoreStatusRequest(@NotNull Boolean isOpen) {}
