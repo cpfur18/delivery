@@ -11,7 +11,6 @@ import com.delivery.domain.store.entity.Store;
 import com.delivery.domain.store.exception.StoreException;
 import com.delivery.domain.store.repository.StoreRepository;
 import com.delivery.domain.store.service.StoreService;
-import com.delivery.domain.user.entity.Role;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -46,7 +45,7 @@ class MenuStoreCascadeIntegrationTest extends AbstractIntegrationTest {
         MenuEntity menu2 = menuRepository.save(new MenuEntity(storeId, "메뉴2", null, 2000));
 
         String deletedBy = ownerId + "_owner1";
-        storeService.deleteStore(storeId, ownerId, Role.Authority.OWNER, deletedBy);
+        storeService.deleteStore(storeId, ownerId, false, deletedBy);
 
         // 삭제되지 않은 메뉴로는 더 이상 조회되지 않아야 한다.
         List<MenuEntity> remaining = menuRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
@@ -79,7 +78,7 @@ class MenuStoreCascadeIntegrationTest extends AbstractIntegrationTest {
         assertThatThrownBy(
                         () ->
                                 storeService.deleteStore(
-                                        storeId, otherOwnerId, Role.Authority.OWNER, "other_owner"))
+                                        storeId, otherOwnerId, false, "other_owner"))
                 .isInstanceOf(StoreException.class);
 
         assertThat(menuRepository.findAllByStoreIdAndDeletedAtIsNull(storeId)).hasSize(1);
