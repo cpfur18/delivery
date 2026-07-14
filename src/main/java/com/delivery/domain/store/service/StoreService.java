@@ -58,7 +58,7 @@ public class StoreService {
 
     // 가게 목록 조회
     public Page<StoreResponse> getStores(UUID categoryId, UUID regionId, String name, Pageable pageable) {
-        return storeRepository.findStores(categoryId, regionId, name, pageable)
+        return storeRepository.searchStores(categoryId, name, pageable)
                 .map(StoreResponse::from);
     }
 
@@ -93,7 +93,7 @@ public class StoreService {
     @Transactional
     public void deleteStore(UUID storeId, Long userId, String role, String deletedBy) {
         Store store = getStoreWithOwnerCheck(storeId, userId, role);
-        menuService.deleteMenusByStoreId(storeId, userId.toString());
+        menuService.deleteMenusByStoreId(storeId, deletedBy);
         store.delete(deletedBy);
     }
 

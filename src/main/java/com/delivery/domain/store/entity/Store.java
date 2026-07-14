@@ -8,7 +8,7 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
-@Table(name = "p_store", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name", "region_id"}))
+@Table(name = "p_store")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

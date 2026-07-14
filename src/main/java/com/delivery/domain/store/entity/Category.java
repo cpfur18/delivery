@@ -19,7 +19,7 @@ public class Category extends BaseEntity {
     @Column(name = "category_id")
     private UUID categoryId;
 
-    @Column(name = "name", nullable = false, length = 50, unique = true)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
     public void update(String name) {

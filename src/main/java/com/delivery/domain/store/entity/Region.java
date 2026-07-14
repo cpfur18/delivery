@@ -19,7 +19,7 @@ public class Region extends BaseEntity {
     @Column(name = "region_id")
     private UUID regionId;
 
-    @Column(name = "name", nullable = false, length = 100, unique = true)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Column(name = "latitude")
