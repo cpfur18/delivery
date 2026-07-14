@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: delivery-postgres
+    restart: always
+
+    environment:
+      POSTGRES_DB: delivery
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "5433:5432"     # 로컬 포트번호 5433으로 변경함
+
+    volumes:
+      - delivery-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  delivery-postgres-data:
