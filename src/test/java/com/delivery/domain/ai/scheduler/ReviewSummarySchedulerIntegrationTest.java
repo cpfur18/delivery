@@ -11,6 +11,7 @@ import com.delivery.config.AbstractIntegrationTest;
 import com.delivery.domain.ai.client.GeminiClient;
 import com.delivery.domain.ai.entity.StoreReviewSummaryEntity;
 import com.delivery.domain.ai.repository.StoreReviewSummaryRepository;
+import com.delivery.domain.menu.fixture.StoreTestFixture;
 import com.delivery.domain.review.entity.Review;
 import com.delivery.domain.review.repository.ReviewRepository;
 import com.delivery.domain.store.entity.Store;
@@ -42,16 +43,7 @@ class ReviewSummarySchedulerIntegrationTest extends AbstractIntegrationTest {
     @MockitoBean private GeminiClient geminiClient;
 
     private UUID createTestStore(Long ownerId) {
-        Store store =
-                Store.builder()
-                        .userId(ownerId)
-                        .categoryId(UUID.randomUUID())
-                        .regionId(UUID.randomUUID())
-                        .name("스케줄러검증가게" + UUID.randomUUID())
-                        .address("서울시 강남구 테스트로 1")
-                        .phone("01012345678")
-                        .minOrderAmount(5000)
-                        .build();
+        Store store = StoreTestFixture.DEFAULT.createStore(ownerId);
         return storeRepository.save(store).getStoreId();
     }
 

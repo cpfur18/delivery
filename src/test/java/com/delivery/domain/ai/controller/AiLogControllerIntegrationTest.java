@@ -4,13 +4,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.delivery.config.AbstractIntegrationTest;
-import com.delivery.domain.user.entity.Role;
+import com.delivery.domain.menu.fixture.TestUserFixture;
 import com.delivery.domain.user.entity.User;
 import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.jwt.JwtUtil;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,16 +34,8 @@ class AiLogControllerIntegrationTest extends AbstractIntegrationTest {
     @Autowired private JwtUtil jwtUtil;
     @Autowired private RefreshTokenRepository refreshTokenRepository;
 
-    private String issueAccessToken(Set<Role> roles) {
-        String suffix = UUID.randomUUID().toString().substring(0, 8);
-        User user =
-                userRepository.save(
-                        User.create(
-                                "u" + suffix,
-                                "encoded-password",
-                                "닉" + suffix,
-                                "01000000000",
-                                roles));
+    private String issueAccessToken(TestUserFixture fixture) {
+        User user = userRepository.save(fixture.createUser());
         CustomUserDetails userDetails = CustomUserDetails.from(user);
         String accessToken =
                 jwtUtil.generateAccessToken(userDetails, user.getUserUuid(), UUID.randomUUID());
@@ -61,7 +52,7 @@ class AiLogControllerIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("CUSTOMER는 조회할 수 없다(403)")
     void searchLogs_returns403_whenCustomer() throws Exception {
-        String token = issueAccessToken(Set.of(Role.CUSTOMER));
+        String token = issueAccessToken(TestUserFixture.CUSTOMER);
 
         mockMvc.perform(get("/api/v1/ai-logs").header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
@@ -70,7 +61,7 @@ class AiLogControllerIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("OWNER는 조회할 수 없다(403)")
     void searchLogs_returns403_whenOwner() throws Exception {
-        String token = issueAccessToken(Set.of(Role.OWNER));
+        String token = issueAccessToken(TestUserFixture.OWNER);
 
         mockMvc.perform(get("/api/v1/ai-logs").header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
@@ -79,7 +70,7 @@ class AiLogControllerIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("MANAGER는 조회할 수 있다(200)")
     void searchLogs_returns200_whenManager() throws Exception {
-        String token = issueAccessToken(Set.of(Role.MANAGER));
+        String token = issueAccessToken(TestUserFixture.MANAGER);
 
         mockMvc.perform(get("/api/v1/ai-logs").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
@@ -88,7 +79,7 @@ class AiLogControllerIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("MASTER는 조회할 수 있다(200)")
     void searchLogs_returns200_whenMaster() throws Exception {
-        String token = issueAccessToken(Set.of(Role.MASTER));
+        String token = issueAccessToken(TestUserFixture.MASTER);
 
         mockMvc.perform(get("/api/v1/ai-logs").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());

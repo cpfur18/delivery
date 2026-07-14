@@ -1,13 +1,17 @@
 package com.delivery.domain.menu.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.delivery.config.AbstractIntegrationTest;
 import com.delivery.domain.menu.entity.MenuEntity;
+import com.delivery.domain.menu.fixture.StoreTestFixture;
 import com.delivery.domain.menu.repository.MenuRepository;
 import com.delivery.domain.store.entity.Store;
+import com.delivery.domain.store.exception.StoreException;
 import com.delivery.domain.store.repository.StoreRepository;
 import com.delivery.domain.store.service.StoreService;
+import com.delivery.domain.user.entity.Role;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -36,23 +40,13 @@ class MenuStoreCascadeIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("가게 삭제 시 소속 메뉴가 실제로 소프트 삭제되고 deletedBy가 일치한다")
     void deleteStore_cascadesToMenus_withMatchingDeletedBy() {
         Long ownerId = 800001L;
-        Store store =
-                storeRepository.save(
-                        Store.builder()
-                                .userId(ownerId)
-                                .categoryId(UUID.randomUUID())
-                                .regionId(UUID.randomUUID())
-                                .name("캐스케이드검증가게" + UUID.randomUUID())
-                                .address("서울시 강남구 테스트로 1")
-                                .phone("01011112222")
-                                .minOrderAmount(5000)
-                                .build());
+        Store store = storeRepository.save(StoreTestFixture.DEFAULT.createStore(ownerId));
         UUID storeId = store.getStoreId();
         MenuEntity menu1 = menuRepository.save(new MenuEntity(storeId, "메뉴1", null, 1000));
         MenuEntity menu2 = menuRepository.save(new MenuEntity(storeId, "메뉴2", null, 2000));
 
         String deletedBy = ownerId + "_owner1";
-        storeService.deleteStore(storeId, ownerId, "ROLE_OWNER", deletedBy);
+        storeService.deleteStore(storeId, ownerId, Role.Authority.OWNER, deletedBy);
 
         // 삭제되지 않은 메뉴로는 더 이상 조회되지 않아야 한다.
         List<MenuEntity> remaining = menuRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
@@ -78,25 +72,15 @@ class MenuStoreCascadeIntegrationTest extends AbstractIntegrationTest {
     void deleteStore_doesNotCascade_whenNotOwner() {
         Long realOwnerId = 800002L;
         Long otherOwnerId = 800003L;
-        Store store =
-                storeRepository.save(
-                        Store.builder()
-                                .userId(realOwnerId)
-                                .categoryId(UUID.randomUUID())
-                                .regionId(UUID.randomUUID())
-                                .name("캐스케이드미실행가게" + UUID.randomUUID())
-                                .address("서울시 강남구 테스트로 1")
-                                .phone("01011112222")
-                                .minOrderAmount(5000)
-                                .build());
+        Store store = storeRepository.save(StoreTestFixture.DEFAULT.createStore(realOwnerId));
         UUID storeId = store.getStoreId();
         menuRepository.save(new MenuEntity(storeId, "메뉴1", null, 1000));
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(
+        assertThatThrownBy(
                         () ->
                                 storeService.deleteStore(
-                                        storeId, otherOwnerId, "ROLE_OWNER", "other_owner"))
-                .isInstanceOf(com.delivery.domain.store.exception.StoreException.class);
+                                        storeId, otherOwnerId, Role.Authority.OWNER, "other_owner"))
+                .isInstanceOf(StoreException.class);
 
         assertThat(menuRepository.findAllByStoreIdAndDeletedAtIsNull(storeId)).hasSize(1);
     }

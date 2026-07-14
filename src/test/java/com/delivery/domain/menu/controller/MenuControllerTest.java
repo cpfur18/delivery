@@ -20,7 +20,9 @@ import com.delivery.domain.menu.dto.response.PublicMenuResponse;
 import com.delivery.domain.menu.entity.MenuEntity;
 import com.delivery.domain.menu.exception.MenuErrorCode;
 import com.delivery.domain.menu.exception.MenuException;
+import com.delivery.domain.menu.fixture.MenuFixture;
 import com.delivery.domain.menu.service.MenuService;
+import com.delivery.domain.user.entity.Role;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.jwt.JwtRequestFilter;
@@ -84,23 +86,23 @@ class MenuControllerTest {
         @Test
         @DisplayName("생성에 성공하면 201과 생성된 메뉴를 반환한다")
         void createMenu_returns201() throws Exception {
-            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            setAuthenticatedPrincipal(1L, "owner1", Role.Authority.OWNER);
             try {
                 MenuResponse response =
-                        MenuResponse.from(new MenuEntity(STORE_ID, "김치찌개", "설명", 8000));
+                        MenuResponse.from(MenuFixture.CREATE.createEntity(STORE_ID));
                 given(
                                 menuService.createMenu(
                                         eq(STORE_ID),
-                                        eq("김치찌개"),
-                                        eq("설명"),
-                                        eq(8000),
+                                        eq(MenuFixture.CREATE.menuName()),
+                                        eq(MenuFixture.CREATE.description()),
+                                        eq(MenuFixture.CREATE.price()),
                                         eq(false),
                                         isNull(),
                                         eq(1L),
                                         eq(false)))
                         .willReturn(response);
 
-                CreateMenuRequest request = new CreateMenuRequest("김치찌개", "설명", 8000, false, null);
+                CreateMenuRequest request = MenuFixture.CREATE.createRequestDto();
 
                 mockMvc.perform(
                                 post("/api/v1/stores/{storeId}/menus", STORE_ID)
@@ -109,8 +111,8 @@ class MenuControllerTest {
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.code").value(201))
-                        .andExpect(jsonPath("$.data.name").value("김치찌개"))
-                        .andExpect(jsonPath("$.data.price").value(8000))
+                        .andExpect(jsonPath("$.data.name").value(MenuFixture.CREATE.menuName()))
+                        .andExpect(jsonPath("$.data.price").value(MenuFixture.CREATE.price()))
                         .andExpect(jsonPath("$.data.hidden").value(false));
             } finally {
                 SecurityContextHolder.clearContext();
@@ -120,7 +122,13 @@ class MenuControllerTest {
         @Test
         @DisplayName("이름이 비어있으면 400과 INVALID_MENU_NAME 에러를 반환한다")
         void createMenu_returns400_whenNameBlank() throws Exception {
-            CreateMenuRequest request = new CreateMenuRequest("", "설명", 8000, false, null);
+            CreateMenuRequest request =
+                    new CreateMenuRequest(
+                            "",
+                            MenuFixture.CREATE.description(),
+                            MenuFixture.CREATE.price(),
+                            false,
+                            null);
 
             mockMvc.perform(
                             post("/api/v1/stores/{storeId}/menus", STORE_ID)
@@ -128,13 +136,20 @@ class MenuControllerTest {
                                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.error").value("INVALID_MENU_NAME"));
+                    .andExpect(
+                            jsonPath("$.error").value(MenuErrorCode.INVALID_MENU_NAME.getName()));
         }
 
         @Test
         @DisplayName("가격이 0 이하이면 400과 INVALID_MENU_PRICE 에러를 반환한다")
         void createMenu_returns400_whenPriceNotPositive() throws Exception {
-            CreateMenuRequest request = new CreateMenuRequest("김치찌개", "설명", 0, false, null);
+            CreateMenuRequest request =
+                    new CreateMenuRequest(
+                            MenuFixture.CREATE.menuName(),
+                            MenuFixture.CREATE.description(),
+                            0,
+                            false,
+                            null);
 
             mockMvc.perform(
                             post("/api/v1/stores/{storeId}/menus", STORE_ID)
@@ -142,34 +157,37 @@ class MenuControllerTest {
                                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.error").value("INVALID_MENU_PRICE"));
+                    .andExpect(
+                            jsonPath("$.error").value(MenuErrorCode.INVALID_MENU_PRICE.getName()));
         }
 
         @Test
         @DisplayName("가게 소유자가 아니면 403과 NOT_MENU_STORE_OWNER 에러를 반환한다")
         void createMenu_returns403_whenNotStoreOwner() throws Exception {
-            setAuthenticatedPrincipal(2L, "other", "ROLE_OWNER");
+            setAuthenticatedPrincipal(2L, "other", Role.Authority.OWNER);
             try {
                 given(
                                 menuService.createMenu(
                                         eq(STORE_ID),
-                                        eq("김치찌개"),
-                                        eq("설명"),
-                                        eq(8000),
+                                        eq(MenuFixture.CREATE.menuName()),
+                                        eq(MenuFixture.CREATE.description()),
+                                        eq(MenuFixture.CREATE.price()),
                                         eq(false),
                                         isNull(),
                                         eq(2L),
                                         eq(false)))
                         .willThrow(new MenuException(MenuErrorCode.NOT_MENU_STORE_OWNER));
 
-                CreateMenuRequest request = new CreateMenuRequest("김치찌개", "설명", 8000, false, null);
+                CreateMenuRequest request = MenuFixture.CREATE.createRequestDto();
 
                 mockMvc.perform(
                                 post("/api/v1/stores/{storeId}/menus", STORE_ID)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isForbidden())
-                        .andExpect(jsonPath("$.error").value("NOT_MENU_STORE_OWNER"));
+                        .andExpect(
+                                jsonPath("$.error")
+                                        .value(MenuErrorCode.NOT_MENU_STORE_OWNER.getName()));
             } finally {
                 SecurityContextHolder.clearContext();
             }
@@ -183,17 +201,17 @@ class MenuControllerTest {
         @Test
         @DisplayName("소유자가 조회하면 hidden 필드가 포함된 목록을 반환한다")
         void getStoreMenus_returns200_withHiddenField_whenOwner() throws Exception {
-            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            setAuthenticatedPrincipal(1L, "owner1", Role.Authority.OWNER);
             try {
                 MenuResponse response =
-                        MenuResponse.from(new MenuEntity(STORE_ID, "김치찌개", "설명", 8000));
+                        MenuResponse.from(MenuFixture.CREATE.createEntity(STORE_ID));
                 given(menuService.getStoreMenus(STORE_ID, 1L, false)).willReturn(List.of(response));
 
                 mockMvc.perform(get("/api/v1/stores/{storeId}/menus", STORE_ID))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.data.length()").value(1))
-                        .andExpect(jsonPath("$.data[0].name").value("김치찌개"))
+                        .andExpect(jsonPath("$.data[0].name").value(MenuFixture.CREATE.menuName()))
                         .andExpect(jsonPath("$.data[0].hidden").exists());
             } finally {
                 SecurityContextHolder.clearContext();
@@ -203,15 +221,15 @@ class MenuControllerTest {
         @Test
         @DisplayName("손님이 조회하면 hidden 필드가 없는 공개 목록을 반환한다")
         void getStoreMenus_returns200_withoutHiddenField_whenNotOwner() throws Exception {
-            setAuthenticatedPrincipal(2L, "customer1", "ROLE_CUSTOMER");
+            setAuthenticatedPrincipal(2L, "customer1", Role.Authority.CUSTOMER);
             try {
                 PublicMenuResponse response =
-                        PublicMenuResponse.from(new MenuEntity(STORE_ID, "김치찌개", "설명", 8000));
+                        PublicMenuResponse.from(MenuFixture.CREATE.createEntity(STORE_ID));
                 given(menuService.getStoreMenus(STORE_ID, 2L, false)).willReturn(List.of(response));
 
                 mockMvc.perform(get("/api/v1/stores/{storeId}/menus", STORE_ID))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data[0].name").value("김치찌개"))
+                        .andExpect(jsonPath("$.data[0].name").value(MenuFixture.CREATE.menuName()))
                         .andExpect(jsonPath("$.data[0].hidden").doesNotExist())
                         .andExpect(jsonPath("$.data[0].updatedAt").doesNotExist());
             } finally {
@@ -228,16 +246,16 @@ class MenuControllerTest {
         @DisplayName("소유자가 조회하면 hidden 필드가 포함된 정보를 반환한다")
         void getMenu_returns200_withHiddenField_whenOwner() throws Exception {
             UUID menuId = UUID.randomUUID();
-            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            setAuthenticatedPrincipal(1L, "owner1", Role.Authority.OWNER);
             try {
                 MenuResponse response =
-                        MenuResponse.from(new MenuEntity(STORE_ID, "김치찌개", "설명", 8000));
+                        MenuResponse.from(MenuFixture.CREATE.createEntity(STORE_ID));
                 given(menuService.getMenu(menuId, 1L, false)).willReturn(response);
 
                 mockMvc.perform(get("/api/v1/menus/{menuId}", menuId))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success").value(true))
-                        .andExpect(jsonPath("$.data.name").value("김치찌개"))
+                        .andExpect(jsonPath("$.data.name").value(MenuFixture.CREATE.menuName()))
                         .andExpect(jsonPath("$.data.hidden").exists());
             } finally {
                 SecurityContextHolder.clearContext();
@@ -248,15 +266,15 @@ class MenuControllerTest {
         @DisplayName("손님이 조회하면 hidden 필드가 없는 공개 정보를 반환한다")
         void getMenu_returns200_withoutHiddenField_whenNotOwner() throws Exception {
             UUID menuId = UUID.randomUUID();
-            setAuthenticatedPrincipal(2L, "customer1", "ROLE_CUSTOMER");
+            setAuthenticatedPrincipal(2L, "customer1", Role.Authority.CUSTOMER);
             try {
                 PublicMenuResponse response =
-                        PublicMenuResponse.from(new MenuEntity(STORE_ID, "김치찌개", "설명", 8000));
+                        PublicMenuResponse.from(MenuFixture.CREATE.createEntity(STORE_ID));
                 given(menuService.getMenu(menuId, 2L, false)).willReturn(response);
 
                 mockMvc.perform(get("/api/v1/menus/{menuId}", menuId))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data.name").value("김치찌개"))
+                        .andExpect(jsonPath("$.data.name").value(MenuFixture.CREATE.menuName()))
                         .andExpect(jsonPath("$.data.hidden").doesNotExist());
             } finally {
                 SecurityContextHolder.clearContext();
@@ -267,7 +285,7 @@ class MenuControllerTest {
         @DisplayName("존재하지 않으면 404와 MENU_NOT_FOUND 에러를 반환한다")
         void getMenu_returns404_whenNotFound() throws Exception {
             UUID menuId = UUID.randomUUID();
-            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            setAuthenticatedPrincipal(1L, "owner1", Role.Authority.OWNER);
             try {
                 given(menuService.getMenu(menuId, 1L, false))
                         .willThrow(new MenuException(MenuErrorCode.MENU_NOT_FOUND));
@@ -275,7 +293,8 @@ class MenuControllerTest {
                 mockMvc.perform(get("/api/v1/menus/{menuId}", menuId))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.success").value(false))
-                        .andExpect(jsonPath("$.error").value("MENU_NOT_FOUND"))
+                        .andExpect(
+                                jsonPath("$.error").value(MenuErrorCode.MENU_NOT_FOUND.getName()))
                         .andExpect(
                                 jsonPath("$.message")
                                         .value(MenuErrorCode.MENU_NOT_FOUND.getMessage()));
@@ -292,30 +311,30 @@ class MenuControllerTest {
         @Test
         @DisplayName("수정에 성공하면 200과 수정된 메뉴를 반환한다")
         void updateMenu_returns200() throws Exception {
-            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            setAuthenticatedPrincipal(1L, "owner1", Role.Authority.OWNER);
             try {
                 UUID menuId = UUID.randomUUID();
                 MenuResponse response =
-                        MenuResponse.from(new MenuEntity(STORE_ID, "된장찌개", "새 설명", 9000));
+                        MenuResponse.from(MenuFixture.UPDATE.createEntity(STORE_ID));
                 given(
                                 menuService.updateMenu(
                                         eq(menuId),
-                                        eq("된장찌개"),
-                                        eq("새 설명"),
-                                        eq(9000),
+                                        eq(MenuFixture.UPDATE.menuName()),
+                                        eq(MenuFixture.UPDATE.description()),
+                                        eq(MenuFixture.UPDATE.price()),
                                         eq(1L),
                                         eq(false)))
                         .willReturn(response);
 
-                UpdateMenuRequest request = new UpdateMenuRequest("된장찌개", "새 설명", 9000);
+                UpdateMenuRequest request = MenuFixture.UPDATE.updateRequestDto();
 
                 mockMvc.perform(
                                 patch("/api/v1/menus/{menuId}", menuId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data.name").value("된장찌개"))
-                        .andExpect(jsonPath("$.data.price").value(9000));
+                        .andExpect(jsonPath("$.data.name").value(MenuFixture.UPDATE.menuName()))
+                        .andExpect(jsonPath("$.data.price").value(MenuFixture.UPDATE.price()));
             } finally {
                 SecurityContextHolder.clearContext();
             }
@@ -325,28 +344,34 @@ class MenuControllerTest {
         @DisplayName("이름이 비어있으면 400과 INVALID_MENU_NAME 에러를 반환한다")
         void updateMenu_returns400_whenNameBlank() throws Exception {
             UUID menuId = UUID.randomUUID();
-            UpdateMenuRequest request = new UpdateMenuRequest("", "새 설명", 9000);
+            UpdateMenuRequest request =
+                    new UpdateMenuRequest(
+                            "", MenuFixture.UPDATE.description(), MenuFixture.UPDATE.price());
 
             mockMvc.perform(
                             patch("/api/v1/menus/{menuId}", menuId)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error").value("INVALID_MENU_NAME"));
+                    .andExpect(
+                            jsonPath("$.error").value(MenuErrorCode.INVALID_MENU_NAME.getName()));
         }
 
         @Test
         @DisplayName("가격이 0 이하이면 400과 INVALID_MENU_PRICE 에러를 반환한다")
         void updateMenu_returns400_whenPriceNotPositive() throws Exception {
             UUID menuId = UUID.randomUUID();
-            UpdateMenuRequest request = new UpdateMenuRequest("된장찌개", "새 설명", 0);
+            UpdateMenuRequest request =
+                    new UpdateMenuRequest(
+                            MenuFixture.UPDATE.menuName(), MenuFixture.UPDATE.description(), 0);
 
             mockMvc.perform(
                             patch("/api/v1/menus/{menuId}", menuId)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error").value("INVALID_MENU_PRICE"));
+                    .andExpect(
+                            jsonPath("$.error").value(MenuErrorCode.INVALID_MENU_PRICE.getName()));
         }
     }
 
@@ -357,10 +382,10 @@ class MenuControllerTest {
         @Test
         @DisplayName("변경에 성공하면 200과 변경된 메뉴를 반환한다")
         void updateVisibility_returns200() throws Exception {
-            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            setAuthenticatedPrincipal(1L, "owner1", Role.Authority.OWNER);
             try {
                 UUID menuId = UUID.randomUUID();
-                MenuEntity menu = new MenuEntity(STORE_ID, "김치찌개", "설명", 8000);
+                MenuEntity menu = MenuFixture.CREATE.createEntity(STORE_ID);
                 menu.updateHidden(true);
                 given(menuService.updateVisibility(menuId, true, 1L, false))
                         .willReturn(MenuResponse.from(menu));
@@ -388,7 +413,9 @@ class MenuControllerTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content("{}"))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error").value("MENU_HIDDEN_STATUS_REQUIRED"));
+                    .andExpect(
+                            jsonPath("$.error")
+                                    .value(MenuErrorCode.MENU_HIDDEN_STATUS_REQUIRED.getName()));
         }
     }
 
@@ -401,7 +428,7 @@ class MenuControllerTest {
         void deleteMenu_returns200WithNullData() throws Exception {
             UUID menuId = UUID.randomUUID();
 
-            setAuthenticatedPrincipal(1L, "owner1", "ROLE_OWNER");
+            setAuthenticatedPrincipal(1L, "owner1", Role.Authority.OWNER);
             try {
                 mockMvc.perform(delete("/api/v1/menus/{menuId}", menuId))
                         .andExpect(status().isOk())
@@ -418,7 +445,7 @@ class MenuControllerTest {
         void deleteMenu_bypassesOwnership_forManager() throws Exception {
             UUID menuId = UUID.randomUUID();
 
-            setAuthenticatedPrincipal(9L, "manager1", "ROLE_MANAGER");
+            setAuthenticatedPrincipal(9L, "manager1", Role.Authority.MANAGER);
             try {
                 mockMvc.perform(delete("/api/v1/menus/{menuId}", menuId))
                         .andExpect(status().isOk());

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.delivery.domain.ai.dto.response.ReviewSummaryResponse;
+import com.delivery.domain.ai.dto.response.ReviewSummaryStatus;
 import com.delivery.domain.ai.entity.StoreReviewSummaryEntity;
 import com.delivery.domain.ai.service.ReviewSummaryService;
 import com.delivery.domain.store.exception.StoreErrorCode;
@@ -54,7 +55,9 @@ class ReviewSummaryControllerTest {
             mockMvc.perform(get("/api/v1/stores/{storeId}/review-summary", STORE_ID))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.status").value("NOT_ENOUGH_REVIEWS"))
+                    .andExpect(
+                            jsonPath("$.data.status")
+                                    .value(ReviewSummaryStatus.NOT_ENOUGH_REVIEWS.name()))
                     .andExpect(jsonPath("$.data.reviewCount").value(3))
                     .andExpect(jsonPath("$.data.summary").doesNotExist());
         }
@@ -67,7 +70,9 @@ class ReviewSummaryControllerTest {
 
             mockMvc.perform(get("/api/v1/stores/{storeId}/review-summary", STORE_ID))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.status").value("PENDING_GENERATION"))
+                    .andExpect(
+                            jsonPath("$.data.status")
+                                    .value(ReviewSummaryStatus.PENDING_GENERATION.name()))
                     .andExpect(jsonPath("$.data.reviewCount").value(12));
         }
 
@@ -81,7 +86,7 @@ class ReviewSummaryControllerTest {
 
             mockMvc.perform(get("/api/v1/stores/{storeId}/review-summary", STORE_ID))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.status").value("READY"))
+                    .andExpect(jsonPath("$.data.status").value(ReviewSummaryStatus.READY.name()))
                     .andExpect(jsonPath("$.data.summary").value("다들 맛있다고 평가했습니다."))
                     .andExpect(jsonPath("$.data.reviewCount").value(10));
         }
@@ -95,7 +100,7 @@ class ReviewSummaryControllerTest {
             mockMvc.perform(get("/api/v1/stores/{storeId}/review-summary", STORE_ID))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.error").value("STORE_NOT_FOUND"));
+                    .andExpect(jsonPath("$.error").value(StoreErrorCode.STORE_NOT_FOUND.getName()));
         }
     }
 }
