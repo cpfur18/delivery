@@ -1,12 +1,18 @@
 package com.delivery.domain.user.service;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.delivery.domain.user.dto.request.UpdateUserRoleRequest;
-import com.delivery.domain.user.dto.request.UserSearchRequest;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.entity.User;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.fixture.UserFixture;
 import com.delivery.domain.user.repository.UserRepository;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,27 +21,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Optional;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class UserAdminServiceUnitTest {
-    @Mock
-    private UserRepository userRepository;
+    @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
-    @InjectMocks
-    private UserAdminService userAdminService;
+    @InjectMocks private UserAdminService userAdminService;
 
     private User user;
 
@@ -76,7 +70,6 @@ class UserAdminServiceUnitTest {
                     .hasMessage("존재하지 않는 회원입니다.");
 
             verify(userRepository, never()).save(any());
-
         }
     }
 
@@ -95,10 +88,6 @@ class UserAdminServiceUnitTest {
             assertThatThrownBy(() -> userAdminService.findUserInfo(userId))
                     .isInstanceOf(UserException.class)
                     .hasMessage("존재하지 않는 회원입니다.");
-
-
         }
     }
 }
-
-

@@ -78,13 +78,15 @@ public class UserService {
 
     /**
      * 회원 삭제 탈퇴 후 이벤트 발생
+     *
      * @param userId 탈퇴 회원 PK키
      */
     public void deleteUser(Long userId) {
         User deletedUser = findActiveUser(userId);
         refreshTokenRepository.delete(deletedUser.getUserUuid());
         deletedUser.delete(deletedUser.getUsername());
-        applicationEventPublisher.publishEvent(new UserDeletedEvent(deletedUser.getId(), deletedUser.getUsername()));
+        applicationEventPublisher.publishEvent(
+                new UserDeletedEvent(deletedUser.getId(), deletedUser.getUsername()));
         // NOTE : 사용하는 쪽은 @EventListener
     }
 

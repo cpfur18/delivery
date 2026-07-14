@@ -12,7 +12,6 @@ import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.dto.response.AuthResponse;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.service.AuthService;
-import com.delivery.global.cache.BlackListRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.config.JwtProperties;
 import com.delivery.global.exception.ErrorCodeRegistry;
@@ -55,7 +54,8 @@ class AuthControllerUnitTest {
                     new SignUpRequest(
                             "test1234", "Testtest123!", "test", "01012345678", Role.CUSTOMER);
 
-            AuthResponse response = new AuthResponse("test1234", "test", "accessToken", "refreshToken");
+            AuthResponse response =
+                    new AuthResponse("test1234", "test", "accessToken", "refreshToken");
 
             given(authService.signUp((any(SignUpRequest.class)))).willReturn(response);
 
@@ -117,7 +117,8 @@ class AuthControllerUnitTest {
                 // given
                 LoginRequest request = new LoginRequest("test1234", "Testtest123!");
 
-                AuthResponse response = new AuthResponse("test1234", "test", "accessToken",  "refreshToken");
+                AuthResponse response =
+                        new AuthResponse("test1234", "test", "accessToken", "refreshToken");
 
                 given(authService.login(any(LoginRequest.class))).willReturn(response);
 

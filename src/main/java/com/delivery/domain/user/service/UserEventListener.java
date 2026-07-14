@@ -20,7 +20,6 @@ public class UserEventListener {
     @TransactionalEventListener
     public void handleUserDeleteEvent(UserDeletedEvent event) {
 
-
         throw new UnsupportedOperationException("개발 중 입니다.");
     }
 }

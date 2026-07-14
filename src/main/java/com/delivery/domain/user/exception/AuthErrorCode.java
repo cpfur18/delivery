@@ -24,7 +24,8 @@ public enum AuthErrorCode implements ErrorCode {
 
     // 403 Forbidden
     NOT_OWNER(HttpStatus.FORBIDDEN, "사장 권한이 없습니다."),
-    NOT_MASTER(HttpStatus.FORBIDDEN, "마스터 권한이 없습니다."),;
+    NOT_MASTER(HttpStatus.FORBIDDEN, "마스터 권한이 없습니다."),
+    ;
 
     private final HttpStatus httpStatus;
     private final String message;
