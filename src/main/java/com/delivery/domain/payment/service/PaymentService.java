@@ -17,7 +17,6 @@ import com.delivery.domain.user.entity.Role;
 import com.delivery.global.exception.BusinessException;
 import com.delivery.global.exception.GlobalErrorCode;
 import com.delivery.global.security.config.CustomUserDetails;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,8 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PaymentService {
-
-    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
@@ -81,7 +78,7 @@ public class PaymentService {
         validatePageRequest(page, size);
         validateStoreAccess(storeId, userDetail);
 
-        Pageable pageable = createNativePageable(page, normalizePageSize(size));
+        Pageable pageable = createPageable(page, normalizePageSize(size));
         Page<PaymentResponse> payments =
                 (status == null
                                 ? paymentRepository.findByStoreId(storeId, pageable)
@@ -119,10 +116,6 @@ public class PaymentService {
         return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "paidAt"));
     }
 
-    private Pageable createNativePageable(int page, int size) {
-        return PageRequest.of(page, size);
-    }
-
     private Order getOrderOrThrow(UUID orderId) {
         return orderRepository
                 .findByIdAndDeletedAtIsNull(orderId)
@@ -130,12 +123,11 @@ public class PaymentService {
     }
 
     private void validateCancelableOrder(Order order) {
-        if (order.getStatus() != OrderStatus.REQUESTED) {
+        if (!order.canTransitionTo(OrderStatus.CUSTOMER_CANCELLED)) {
             throw new PaymentException(PaymentErrorCode.PAYMENT_ORDER_STATE_INVALID);
         }
 
-        LocalDateTime cancelDeadline = order.getCreatedAt().plusMinutes(5);
-        if (LocalDateTime.now().isAfter(cancelDeadline)) {
+        if (!order.isCancelableByCustomerAtNow()) {
             throw new PaymentException(PaymentErrorCode.PAYMENT_CANCEL_TIME_EXPIRED);
         }
     }
@@ -211,15 +203,11 @@ public class PaymentService {
     }
 
     private int normalizePageSize(int size) {
-        if (size <= 10) {
-            return 10;
+        if (size == 10 || size == 30 || size == 50) {
+            return size;
         }
 
-        if (size <= 30) {
-            return 30;
-        }
-
-        return 50;
+        return 10;
     }
 
     private boolean hasRole(CustomUserDetails userDetail, Role role) {

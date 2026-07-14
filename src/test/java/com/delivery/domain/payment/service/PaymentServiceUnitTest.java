@@ -255,7 +255,7 @@ class PaymentServiceUnitTest {
 
         @Test
         @DisplayName("페이지 크기는 10, 30, 50 구간으로 보정한다")
-        void getMyPayments_normalizes_page_size_by_range() {
+        void getMyPayments_normalizes_non_allowed_page_size_to_ten() {
             CustomUserDetails userDetails = createUserDetails(1L, Set.of(Role.CUSTOMER));
 
             when(paymentRepository.findByUserId(eq(1L), any(Pageable.class)))
@@ -268,7 +268,7 @@ class PaymentServiceUnitTest {
                             eq(1L),
                             argThat(
                                     pageable ->
-                                            pageable.getPageSize() == 50
+                                            pageable.getPageSize() == 10
                                                     && "paidAt: DESC"
                                                             .equals(
                                                                     pageable
@@ -364,7 +364,7 @@ class PaymentServiceUnitTest {
 
         @Test
         @DisplayName("가게 결제 목록도 페이지 크기를 구간 보정한다")
-        void getStorePayments_normalizes_page_size_by_range() {
+        void getStorePayments_normalizes_non_allowed_page_size_to_ten() {
             UUID storeId = UUID.randomUUID();
             CustomUserDetails userDetails = createUserDetails(99L, Set.of(Role.MANAGER));
 
@@ -378,8 +378,12 @@ class PaymentServiceUnitTest {
                             eq(storeId),
                             argThat(
                                     pageable ->
-                                            pageable.getPageSize() == 50
-                                                    && pageable.getSort().isUnsorted()));
+                                            pageable.getPageSize() == 10
+                                                    && "paidAt: DESC"
+                                                            .equals(
+                                                                    pageable
+                                                                            .getSort()
+                                                                            .toString())));
         }
     }
 
