@@ -13,6 +13,7 @@ import com.delivery.domain.user.dto.response.AuthResponse;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.service.AuthService;
 import com.delivery.global.cache.BlackListRepository;
+import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.config.JwtProperties;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.jwt.JwtUtil;
@@ -38,7 +39,7 @@ class AuthControllerUnitTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @MockitoBean private BlackListRepository blackListRepository;
+    @MockitoBean private RefreshTokenRepository refreshTokenRepository;
     @MockitoBean private JwtUtil jwtUtil;
     @MockitoBean private JwtProperties jwtProperties;
     @MockitoBean private AuthService authService;
