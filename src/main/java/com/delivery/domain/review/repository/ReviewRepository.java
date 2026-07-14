@@ -26,4 +26,21 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
               AND r.deletedAt IS NULL
             """)
     Double findAverageRatingByStoreId(@Param("storeId") UUID storeId);
+
+    long countByStoreIdAndDeletedAtIsNull(UUID storeId);
+
+    // AI 리뷰 요약 대상 가게 목록 - 삭제되지 않은 리뷰가 threshold개 이상인 가게 storeId만 반환
+    @Query(
+            """
+            SELECT r.storeId
+            FROM Review r
+            WHERE r.deletedAt IS NULL
+            GROUP BY r.storeId
+            HAVING COUNT(r) >= :threshold
+            """)
+    List<UUID> findStoreIdsWithReviewCountAtLeast(@Param("threshold") long threshold);
+
+    // AI 리뷰 요약 프롬프트 구성용 - 리뷰가 아무리 쌓여도 프롬프트 크기(비용/응답속도)가 고정되도록
+    // 최신순 상위 N개만 조회
+    List<Review> findTop50ByStoreIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID storeId);
 }

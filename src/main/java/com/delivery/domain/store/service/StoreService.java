@@ -79,6 +79,11 @@ public class StoreService {
         return StoreResponse.from(store);
     }
 
+    // 가게가 삭제되지 않고 존재하는지 여부 - AI 리뷰 요약 등 다른 도메인이 대상 가게 필터링에 사용
+    public boolean existsActiveStore(UUID storeId) {
+        return storeRepository.findByStoreIdAndDeletedAtIsNull(storeId).isPresent();
+    }
+
     // 가게 수정
     @Transactional
     public StoreResponse updateStore(UUID storeId, Long userId, String role, StoreRequest request) {

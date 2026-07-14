@@ -15,6 +15,8 @@ import com.delivery.domain.ai.entity.AiRequestType;
 import com.delivery.domain.ai.exception.AiErrorCode;
 import com.delivery.domain.ai.exception.AiException;
 import com.delivery.global.exception.BusinessException;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -108,6 +110,54 @@ class AiServiceTest {
                             isNull(),
                             eq(false),
                             eq("Gemini 응답에 candidates가 없습니다"));
+        }
+    }
+
+    @Nested
+    @DisplayName("가게 리뷰 요약")
+    class SummarizeStoreReviews {
+
+        @Test
+        @DisplayName("성공하면 응답을 반환하고 REVIEW_SUMMARY 성공 로그를 storeId와 함께 저장한다")
+        void summarizeStoreReviews_returnsResponse_andLogsSuccess() {
+            UUID storeId = UUID.randomUUID();
+            given(geminiClient.generateContentForBatch(any()))
+                    .willReturn("전반적으로 맛있다는 평가가 많습니다.");
+
+            String result =
+                    aiService.summarizeStoreReviews(storeId, List.of("맛있어요", "재주문 의사 있습니다"));
+
+            assertThat(result).isEqualTo("전반적으로 맛있다는 평가가 많습니다.");
+            verify(aiLogService)
+                    .saveLog(
+                            eq(AiRequestType.REVIEW_SUMMARY),
+                            eq(storeId),
+                            any(),
+                            eq("전반적으로 맛있다는 평가가 많습니다."),
+                            eq(true),
+                            isNull());
+        }
+
+        @Test
+        @DisplayName("Gemini 호출이 실패하면 AI_GENERATION_FAILED 예외를 던지고 실패 로그를 저장한다")
+        void summarizeStoreReviews_throwsAndLogsFailure_whenGeminiFails() {
+            UUID storeId = UUID.randomUUID();
+            given(geminiClient.generateContentForBatch(any()))
+                    .willThrow(new RestClientException("연결 실패"));
+
+            assertThatExceptionOfType(AiException.class)
+                    .isThrownBy(() -> aiService.summarizeStoreReviews(storeId, List.of("맛있어요")))
+                    .extracting(BusinessException::getErrorCode)
+                    .isEqualTo(AiErrorCode.AI_GENERATION_FAILED);
+
+            verify(aiLogService)
+                    .saveLog(
+                            eq(AiRequestType.REVIEW_SUMMARY),
+                            eq(storeId),
+                            any(),
+                            isNull(),
+                            eq(false),
+                            eq("연결 실패"));
         }
     }
 }
