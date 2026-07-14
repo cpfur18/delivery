@@ -16,6 +16,7 @@ import com.delivery.domain.user.dto.response.AddressResponse;
 import com.delivery.domain.user.exception.UserErrorCode;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.service.AddressService;
+import com.delivery.global.cache.BlackListRepository;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +38,7 @@ class AddressControllerUnitTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
+    @MockitoBean private BlackListRepository blackListRepository;
     @MockitoBean private AddressService addressService;
     @MockitoBean private JwtUtil jwtUtil;
     @MockitoBean ErrorCodeRegistry errorCodeRegistry;
