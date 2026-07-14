@@ -1,8 +1,10 @@
 package com.delivery.domain.store.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+
 
 import com.delivery.domain.review.repository.ReviewRepository;
 import com.delivery.domain.store.dto.request.StoreRequest;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 
 @ExtendWith(MockitoExtension.class)
 class StoreServiceUnitTest {
@@ -117,6 +120,64 @@ class StoreServiceUnitTest {
     @Nested
     @DisplayName("가게 수정 실패 테스트")
     class UpdateStore {
+
+        @Test
+        @DisplayName("실제 소유자는 가게를 수정할 수 있다.")
+        void updateStore_success_when_owner() {
+            // given
+            UUID storeId = UUID.randomUUID();
+            Long ownerId = 1L;
+            StoreRequest request = createStoreRequest();
+
+            Store store = Store.builder()
+                    .userId(ownerId)
+                    .categoryId(request.categoryId())
+                    .regionId(request.regionId())
+                    .name(request.name())
+                    .address(request.address())
+                    .phone(request.phone())
+                    .description(request.description())
+                    .minOrderAmount(request.minOrderAmount())
+                    .build();
+
+            when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+            when(categoryRepository.findById(any())).thenReturn(Optional.of(mock(com.delivery.domain.store.entity.Category.class)));
+            when(regionRepository.findById(any())).thenReturn(Optional.of(mock(com.delivery.domain.store.entity.Region.class)));
+
+            // when & then
+            assertThatCode(() -> storeService.updateStore(storeId, ownerId, false, request))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("MANAGER/MASTER는 다른 사람의 가게도 수정할 수 있다.")
+        void updateStore_success_when_elevated() {
+            // given
+            UUID storeId = UUID.randomUUID();
+            Long ownerId = 1L;
+            Long managerId = 2L;
+            StoreRequest request = createStoreRequest();
+
+            Store store = Store.builder()
+                    .userId(ownerId)
+                    .categoryId(request.categoryId())
+                    .regionId(request.regionId())
+                    .name(request.name())
+                    .address(request.address())
+                    .phone(request.phone())
+                    .description(request.description())
+                    .minOrderAmount(request.minOrderAmount())
+                    .build();
+
+            when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+            when(categoryRepository.findById(any())).thenReturn(Optional.of(mock(com.delivery.domain.store.entity.Category.class)));
+            when(regionRepository.findById(any())).thenReturn(Optional.of(mock(com.delivery.domain.store.entity.Region.class)));
+
+            // when & then
+            assertThatCode(() -> storeService.updateStore(storeId, managerId, true, request))
+                    .doesNotThrowAnyException();
+        }
+
         @Test
         @DisplayName("OWNER가 본인 가게가 아닌 가게 수정 시 예외가 발생해야 한다.")
         void updateStore_fail_when_access_denied() {
@@ -150,6 +211,61 @@ class StoreServiceUnitTest {
     @Nested
     @DisplayName("가게 삭제 실패 테스트")
     class DeleteStore {
+
+        @Test
+        @DisplayName("실제 소유자는 가게를 삭제할 수 있고, menuService에 올바른 값이 전달된다.")
+        void deleteStore_success_when_owner() {
+            // given
+            UUID storeId = UUID.randomUUID();
+            Long ownerId = 1L;
+            String deletedBy = "1_owner";
+
+            Store store = Store.builder()
+                    .userId(ownerId)
+                    .categoryId(UUID.randomUUID())
+                    .regionId(UUID.randomUUID())
+                    .name("테스트 가게")
+                    .address("서울")
+                    .phone("01012345678")
+                    .minOrderAmount(10000)
+                    .build();
+
+            when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+
+            // when
+            storeService.deleteStore(storeId, ownerId, false, deletedBy);
+
+            // then
+            verify(menuService).deleteMenusByStoreId(storeId, deletedBy);
+        }
+
+        @Test
+        @DisplayName("MANAGER/MASTER는 다른 사람의 가게도 삭제할 수 있다.")
+        void deleteStore_success_when_elevated() {
+            // given
+            UUID storeId = UUID.randomUUID();
+            Long ownerId = 1L;
+            Long managerId = 2L;
+            String deletedBy = "2_manager";
+
+            Store store = Store.builder()
+                    .userId(ownerId)
+                    .categoryId(UUID.randomUUID())
+                    .regionId(UUID.randomUUID())
+                    .name("테스트 가게")
+                    .address("서울")
+                    .phone("01012345678")
+                    .minOrderAmount(10000)
+                    .build();
+
+            when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+
+            // when
+            storeService.deleteStore(storeId, managerId, true, deletedBy);
+
+            // then
+            verify(menuService).deleteMenusByStoreId(storeId, deletedBy);
+        }
         @Test
         @DisplayName("OWNER가 본인 가게가 아닌 가게 삭제 시 예외가 발생해야 한다.")
         void deleteStore_fail_when_access_denied() {
