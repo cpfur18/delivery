@@ -18,7 +18,9 @@ public enum StoreTestFixture {
                 .userId(ownerId)
                 .categoryId(UUID.randomUUID())
                 .regionId(UUID.randomUUID())
-                .name("테스트가게" + UUID.randomUUID())
+                // Store 도메인의 이름 검색 테스트(containsIgnoreCase)와 부분 문자열이 겹치지
+                // 않도록 "테스트"라는 단어를 피해서 명명 (StoreServiceIntegrationTest 참고)
+                .name("메뉴검증가게" + UUID.randomUUID())
                 .address(address)
                 .phone(phone)
                 .minOrderAmount(minOrderAmount)

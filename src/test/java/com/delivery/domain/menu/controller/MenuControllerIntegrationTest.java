@@ -35,6 +35,10 @@ import org.springframework.test.web.servlet.MockMvc;
 // 서비스 레벨 소유권 검증이 진짜로 걸리는지는 이 세션 초반 수동 curl 검증이 유일한 증거였음.
 // 이 테스트는 필터를 끄지 않은 진짜 @SpringBootTest로, 실제 JWT + 실제 Store 행을 만들어
 // 3단계 권한 모델(역할 → 소유권 → 응답분기) 전체를 실제로 검증한다.
+// @Transactional을 일부러 안 붙임 - MenuService.createMenu()가 Propagation.NOT_SUPPORTED로
+// 별도 트랜잭션/커넥션에서 동작하는데, 테스트에 @Transactional을 붙이면 그 안에서 만든
+// Store가 아직 커밋되지 않아 NOT_SUPPORTED 쪽에서 안 보이게 되어(격리 수준상 당연함)
+// 메뉴 생성 자체가 실패한다. 대신 픽스처가 랜덤 UUID로 이름을 지어 데이터 오염을 방지한다.
 @SpringBootTest(
         properties = {
             "gemini.api-key=test-dummy-key",

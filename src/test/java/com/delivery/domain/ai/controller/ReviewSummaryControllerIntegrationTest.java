@@ -17,12 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 // ReviewSummaryControllerTest(@WebMvcTest, addFilters=false)는 필터 자체가 꺼져있어
 // "인증 없이도 됨"이 항상 참으로 나온다 - SecurityConfig의 permitAll이 실제로
 // /api/v1/stores/*/review-summary 경로에 걸려있는지는 증명하지 못한다.
 // 이 테스트는 필터를 끄지 않고, Authorization 헤더 자체를 아예 안 보내서
 // 진짜 공개 API로 동작하는지 확인한다.
+// @Transactional로 테스트가 만든 Store 데이터를 종료 시 롤백 - 공유 Testcontainers DB에
+// 다른 도메인 테스트와 데이터가 남아 충돌하는 것을 방지한다.
 @SpringBootTest(
         properties = {
             "gemini.api-key=test-dummy-key",
@@ -30,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
             "gemini.model=gemini-1.5-flash"
         })
 @AutoConfigureMockMvc
+@Transactional
 class ReviewSummaryControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;

@@ -23,16 +23,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 
 // 이 세션 내내 수동(curl + 임시 테스트)으로만 검증했던 리뷰 요약 배치 흐름을 자동화된
 // 테스트로 고정한다. GeminiClient만 목으로 막고 나머지(스케줄러, 서비스, 실제 DB)는
 // 전부 진짜로 띄운다.
+// @Transactional로 테스트가 만든 Store/Review 데이터를 종료 시 롤백 - 공유
+// Testcontainers DB에 다른 도메인 테스트와 데이터가 남아 충돌하는 것을 방지한다.
 @SpringBootTest(
         properties = {
             "gemini.api-key=test-dummy-key",
             "gemini.base-url=https://generativelanguage.googleapis.com",
             "gemini.model=gemini-1.5-flash"
         })
+@Transactional
 class ReviewSummarySchedulerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired private ReviewSummaryScheduler scheduler;

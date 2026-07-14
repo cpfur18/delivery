@@ -17,18 +17,22 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 // Store→Menu 캐스케이드 삭제 계약을 실제 DB로 검증한다. StoreServiceUnitTest는
 // MenuService를 목으로 막고, MenuServiceTest도 MenuRepository를 목으로 막아서
 // "가게를 삭제하면 진짜로 그 가게의 메뉴가 소프트 삭제되는지"는 양쪽 단위 테스트
 // 어디에서도 실제로 증명된 적이 없다 - 이 세션 초반 PR #62 머지 과정에서 바로 이
 // 캐스케이드 호출 자체가 조용히 사라졌던 회귀를 직접 잡았던 지점이기도 하다.
+// @Transactional로 테스트가 만든 Store/Menu 데이터를 종료 시 롤백 - 공유 Testcontainers
+// DB에 다른 도메인 테스트와 데이터가 남아 충돌하는 것을 방지한다.
 @SpringBootTest(
         properties = {
             "gemini.api-key=test-dummy-key",
             "gemini.base-url=https://generativelanguage.googleapis.com",
             "gemini.model=gemini-1.5-flash"
         })
+@Transactional
 class MenuStoreCascadeIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired private StoreService storeService;
