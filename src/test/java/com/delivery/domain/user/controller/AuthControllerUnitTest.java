@@ -12,6 +12,7 @@ import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.dto.response.AuthResponse;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.service.AuthService;
+import com.delivery.global.cache.BlackListRepository;
 import com.delivery.global.config.JwtProperties;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.jwt.JwtUtil;
@@ -37,6 +38,7 @@ class AuthControllerUnitTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
+    @MockitoBean private BlackListRepository blackListRepository;
     @MockitoBean private JwtUtil jwtUtil;
     @MockitoBean private JwtProperties jwtProperties;
     @MockitoBean private AuthService authService;
@@ -52,7 +54,7 @@ class AuthControllerUnitTest {
                     new SignUpRequest(
                             "test1234", "Testtest123!", "test", "01012345678", Role.CUSTOMER);
 
-            AuthResponse response = new AuthResponse("test1234", "test", "accessToken");
+            AuthResponse response = new AuthResponse("test1234", "test", "accessToken", "refreshToken");
 
             given(authService.signUp((any(SignUpRequest.class)))).willReturn(response);
 
@@ -65,7 +67,8 @@ class AuthControllerUnitTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.data.username").value("test1234"))
                     .andExpect(jsonPath("$.data.nickName").value("test"))
-                    .andExpect(jsonPath("$.data.accessToken").value("accessToken"));
+                    .andExpect(jsonPath("$.data.accessToken").value("accessToken"))
+                    .andExpect(jsonPath("$.data.refreshToken").value("refreshToken"));
 
             verify(authService).signUp(any(SignUpRequest.class));
         }
@@ -113,7 +116,7 @@ class AuthControllerUnitTest {
                 // given
                 LoginRequest request = new LoginRequest("test1234", "Testtest123!");
 
-                AuthResponse response = new AuthResponse("test1234", "test", "accessToken");
+                AuthResponse response = new AuthResponse("test1234", "test", "accessToken",  "refreshToken");
 
                 given(authService.login(any(LoginRequest.class))).willReturn(response);
 
@@ -126,7 +129,8 @@ class AuthControllerUnitTest {
                         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                         .andExpect(jsonPath("$.data.username").value("test1234"))
                         .andExpect(jsonPath("$.data.nickName").value("test"))
-                        .andExpect(jsonPath("$.data.accessToken").value("accessToken"));
+                        .andExpect(jsonPath("$.data.accessToken").value("accessToken"))
+                        .andExpect(jsonPath("$.data.refreshToken").value("refreshToken"));
 
                 verify(authService).login(any(LoginRequest.class));
             }
