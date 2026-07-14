@@ -73,7 +73,8 @@ class CartServiceUnitTest {
             Cart cart = createCart(1L, storeId);
             CartItem cartItem = CartItem.create(cart, menuId, "Jjajangmyeon", 2, 7000L);
 
-            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.of(menu));
+            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
+                    .thenReturn(Optional.of(menu));
             when(cartRepository.findByUserIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
             when(cartRepository.save(any(Cart.class))).thenReturn(cart);
             when(cartItemRepository.findByCartAndMenuIdAndDeletedAtIsNull(cart, menuId))
@@ -101,7 +102,8 @@ class CartServiceUnitTest {
             Cart cart = createCart(1L, storeId);
             CartItem cartItem = CartItem.create(cart, menuId, "Jjamppong", 1, 9000L);
 
-            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.of(menu));
+            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
+                    .thenReturn(Optional.of(menu));
             when(cartRepository.findByUserIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(cart));
             when(cartItemRepository.findByCartAndMenuIdAndDeletedAtIsNull(cart, menuId))
                     .thenReturn(Optional.of(cartItem));
@@ -126,7 +128,8 @@ class CartServiceUnitTest {
             Cart cart = createCart(1L, storeId);
             CartItem newItem = CartItem.create(cart, menuId, "Bibimbap", 1, 10000L);
 
-            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.of(menu));
+            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
+                    .thenReturn(Optional.of(menu));
             when(cartRepository.findByUserIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(cart));
             when(cartItemRepository.findByCartAndMenuIdAndDeletedAtIsNull(cart, menuId))
                     .thenReturn(Optional.empty());
@@ -149,7 +152,8 @@ class CartServiceUnitTest {
             MenuEntity menu = new MenuEntity(UUID.randomUUID(), "Fried Rice", "basic", 8000);
             Cart cart = createCart(1L, UUID.randomUUID());
 
-            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.of(menu));
+            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
+                    .thenReturn(Optional.of(menu));
             when(cartRepository.findByUserIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(cart));
 
             assertThatThrownBy(() -> cartService.addCartItem(userDetails, menuId, 1))
@@ -164,7 +168,8 @@ class CartServiceUnitTest {
             MenuEntity menu = new MenuEntity(UUID.randomUUID(), "Hidden Menu", "private", 5000);
             menu.updateHidden(true);
 
-            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.of(menu));
+            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
+                    .thenReturn(Optional.of(menu));
 
             assertThatThrownBy(() -> cartService.addCartItem(userDetails, menuId, 1))
                     .isInstanceOf(MenuException.class);
@@ -176,7 +181,8 @@ class CartServiceUnitTest {
             CustomUserDetails userDetails = createUserDetails(1L);
             UUID menuId = UUID.randomUUID();
 
-            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)).thenReturn(Optional.empty());
+            when(menuRepository.findByMenuIdAndDeletedAtIsNull(menuId))
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> cartService.addCartItem(userDetails, menuId, 1))
                     .isInstanceOf(MenuException.class);
@@ -239,9 +245,7 @@ class CartServiceUnitTest {
                     .thenReturn(Optional.of(cartItem));
 
             assertThatThrownBy(
-                            () ->
-                                    cartService.deleteCartItem(
-                                            userDetails, cartItem.getCartItemId()))
+                            () -> cartService.deleteCartItem(userDetails, cartItem.getCartItemId()))
                     .isInstanceOf(BusinessException.class);
         }
 
