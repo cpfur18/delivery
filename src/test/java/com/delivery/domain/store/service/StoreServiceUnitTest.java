@@ -31,6 +31,7 @@ class StoreServiceUnitTest {
     @Mock private RegionRepository regionRepository;
     @Mock private ReviewRepository reviewRepository;
     @Mock private com.delivery.domain.menu.service.MenuService menuService;
+    @Mock private com.delivery.domain.review.service.ReviewService reviewService;
     @InjectMocks private StoreService storeService;
 
     private StoreRequest createStoreRequest() {
