@@ -28,9 +28,15 @@ public class GeminiClient {
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration READ_TIMEOUT = Duration.ofSeconds(30);
 
+    // 배치(새벽 스케줄러) 전용 타임아웃 - 응답을 기다리는 사용자가 없으므로 30초보다
+    // 넉넉하게 잡아, 정상 응답인데도 조금 느린 경우(24~29초대)까지 놓치지 않도록 함.
+    // Menu의 동기 호출(generateContent)에는 영향 없음 - 별도 RestClient를 씀.
+    private static final Duration BATCH_READ_TIMEOUT = Duration.ofSeconds(60);
+
     // RestClient: Spring Boot 3.2+에 내장된 동기 HTTP 클라이언트.
     // RestTemplate의 최신 대체제 - Builder로 baseUrl 등 공통 설정을 미리 잡아두고 재사용함.
     private final RestClient restClient;
+    private final RestClient batchRestClient;
     private final ObjectMapper objectMapper;
     private final String apiKey;
     private final String model;
@@ -41,21 +47,32 @@ public class GeminiClient {
             @Value("${gemini.base-url}") String baseUrl,
             @Value("${gemini.api-key}") String apiKey,
             @Value("${gemini.model}") String model) {
-        // ClientHttpRequestFactoryBuilder.jdk()는 RestClient가 팩토리 미지정 시 쓰는
-        // 기본 구현(JDK HttpClient)과 동일함 - SimpleClientHttpRequestFactory(구식
-        // HttpURLConnection 기반)는 Gemini 응답의 Content-Type을 application/octet-stream으로
-        // 잘못 처리하는 문제가 있어서 타임아웃만 얹은 이 방식으로 교체함.
-        ClientHttpRequestFactory requestFactory =
-                ClientHttpRequestFactoryBuilder.jdk()
-                        .build(
-                                ClientHttpRequestFactorySettings.defaults()
-                                        .withConnectTimeout(CONNECT_TIMEOUT)
-                                        .withReadTimeout(READ_TIMEOUT));
-
-        this.restClient = restClientBuilder.baseUrl(baseUrl).requestFactory(requestFactory).build();
+        this.restClient =
+                restClientBuilder
+                        .baseUrl(baseUrl)
+                        .requestFactory(buildRequestFactory(READ_TIMEOUT))
+                        .build();
+        // Menu 쪽 restClientBuilder(주입받은 빈)와 독립적인 설정이 필요해 별도 builder로 생성
+        this.batchRestClient =
+                RestClient.builder()
+                        .baseUrl(baseUrl)
+                        .requestFactory(buildRequestFactory(BATCH_READ_TIMEOUT))
+                        .build();
         this.objectMapper = objectMapper;
         this.apiKey = apiKey;
         this.model = model;
+    }
+
+    // ClientHttpRequestFactoryBuilder.jdk()는 RestClient가 팩토리 미지정 시 쓰는
+    // 기본 구현(JDK HttpClient)과 동일함 - SimpleClientHttpRequestFactory(구식
+    // HttpURLConnection 기반)는 Gemini 응답의 Content-Type을 application/octet-stream으로
+    // 잘못 처리하는 문제가 있어서 타임아웃만 얹은 이 방식으로 교체함.
+    private static ClientHttpRequestFactory buildRequestFactory(Duration readTimeout) {
+        return ClientHttpRequestFactoryBuilder.jdk()
+                .build(
+                        ClientHttpRequestFactorySettings.defaults()
+                                .withConnectTimeout(CONNECT_TIMEOUT)
+                                .withReadTimeout(readTimeout));
     }
 
     // prompt는 AiService이 글자수 검증 + "50자 이하로" 문구 삽입까지 끝낸 최종 텍스트.
@@ -65,10 +82,19 @@ public class GeminiClient {
     // 파싱할 본문이 없으므로 RestClientException 그대로 전파됨(AiService가 동일하게 처리).
     // API 키가 URL 쿼리에 들어가므로 요청/응답을 로깅하지 않음.
     public String generateContent(String prompt) {
+        return callGenerateContent(restClient, prompt);
+    }
+
+    // 응답을 기다리는 사용자가 없는 배치(새벽 스케줄러) 호출 전용 - 타임아웃만 더 길게 잡은
+    // 별도 RestClient를 쓴다. AiService.summarizeStoreReviews에서만 사용.
+    public String generateContentForBatch(String prompt) {
+        return callGenerateContent(batchRestClient, prompt);
+    }
+
+    private String callGenerateContent(RestClient client, String prompt) {
         try {
             GeminiGenerateContentResponse response =
-                    restClient
-                            .post()
+                    client.post()
                             .uri("/v1beta/models/{model}:generateContent?key={key}", model, apiKey)
                             .contentType(MediaType.APPLICATION_JSON)
                             .body(GeminiGenerateContentRequest.ofText(prompt))
