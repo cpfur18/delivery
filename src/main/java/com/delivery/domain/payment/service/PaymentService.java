@@ -100,9 +100,29 @@ public class PaymentService {
             throw new PaymentException(PaymentErrorCode.PAYMENT_ALREADY_CANCELED);
         }
 
-        validateCancelableOrder(order);
+        validateCancelableOrder(order, userDetail);
         payment.cancel(cancelReason);
         order.changeStatus(OrderStatus.CUSTOMER_CANCELLED);
+        return PaymentResponse.from(payment);
+    }
+
+    @Transactional
+    public PaymentResponse refundPaymentByStoreRejection(UUID orderId, String refundReason) {
+        Payment payment = getPaymentByOrderIdOrThrow(orderId);
+
+        if (payment.isCanceled()) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_ALREADY_CANCELED);
+        }
+
+        if (payment.isRefunded()) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_ALREADY_REFUNDED);
+        }
+
+        if (payment.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_REFUND_STATE_INVALID);
+        }
+
+        payment.refund(refundReason);
         return PaymentResponse.from(payment);
     }
 
@@ -122,9 +142,19 @@ public class PaymentService {
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
     }
 
-    private void validateCancelableOrder(Order order) {
+    private Payment getPaymentByOrderIdOrThrow(UUID orderId) {
+        return paymentRepository
+                .findByOrderId(orderId)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    private void validateCancelableOrder(Order order, CustomUserDetails userDetail) {
         if (!order.canTransitionTo(OrderStatus.CUSTOMER_CANCELLED)) {
             throw new PaymentException(PaymentErrorCode.PAYMENT_ORDER_STATE_INVALID);
+        }
+
+        if (hasAnyRole(userDetail, Role.MANAGER, Role.MASTER)) {
+            return;
         }
 
         if (!order.isCancelableByCustomerAtNow()) {
@@ -183,7 +213,8 @@ public class PaymentService {
         Store store =
                 storeRepository
                         .findByStoreIdAndDeletedAtIsNull(storeId)
-                        .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                        .orElseThrow(
+                                () -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
         if (!store.getUserId().equals(userId)) {
             throw new PaymentException(PaymentErrorCode.PAYMENT_ACCESS_DENIED);

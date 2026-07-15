@@ -8,18 +8,25 @@ import com.delivery.domain.store.dto.request.StoreRequest;
 import com.delivery.domain.store.dto.response.StoreResponse;
 import com.delivery.domain.store.entity.Category;
 import com.delivery.domain.store.entity.Region;
+import com.delivery.domain.store.enums.StoreSortType;
 import com.delivery.domain.store.exception.StoreException;
 import com.delivery.domain.store.repository.CategoryRepository;
 import com.delivery.domain.store.repository.RegionRepository;
+import com.delivery.domain.store.enums.StoreSortType;
 import java.util.UUID;
+import java.util.Comparator;
+
+import com.delivery.domain.user.UserDeletedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(properties = {
@@ -33,6 +40,8 @@ class StoreServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private StoreService storeService;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private RegionRepository regionRepository;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private Category savedCategory;
     private Region savedRegion;
@@ -123,7 +132,7 @@ class StoreServiceIntegrationTest extends AbstractIntegrationTest {
                     savedCategory.getCategoryId(), savedRegion.getRegionId(),
                     "다른 가게", "서울시 서초구", "01098765432", null, 5000));
 
-            Page<StoreResponse> result = storeService.getStores(null, null, null, PageRequest.of(0, 10));
+            Page<StoreResponse> result = storeService.getStores(null, null, null, null, PageRequest.of(0, 10));
 
             assertThat(result.getTotalElements()).isGreaterThanOrEqualTo(2);
         }
@@ -136,7 +145,7 @@ class StoreServiceIntegrationTest extends AbstractIntegrationTest {
                     savedCategory.getCategoryId(), savedRegion.getRegionId(),
                     "다른 가게", "서울시 서초구", "01098765432", null, 5000));
 
-            Page<StoreResponse> result = storeService.getStores(null, null, "테스트", PageRequest.of(0, 10));
+            Page<StoreResponse> result = storeService.getStores(null, null, "테스트", null, PageRequest.of(0, 10));
 
             assertThat(result.getTotalElements()).isEqualTo(1);
             assertThat(result.getContent().get(0).name()).isEqualTo("테스트 가게");
@@ -153,17 +162,74 @@ class StoreServiceIntegrationTest extends AbstractIntegrationTest {
                     "중식 가게", "서울시 서초구", "01098765432", null, 5000));
 
             Page<StoreResponse> result = storeService.getStores(
-                    savedCategory.getCategoryId(), null, null, PageRequest.of(0, 10));
+                    savedCategory.getCategoryId(), null, null, null, PageRequest.of(0, 10));
 
             assertThat(result.getContent()).allMatch(s -> s.categoryId().equals(savedCategory.getCategoryId()));
         }
 
         @Test
+        @DisplayName("지역으로 가게를 필터링한다.")
+        void searchStores_by_region() {
+            Region otherRegion = regionRepository.save(Region.builder().name("부산").build());
+
+            storeService.createStore(OWNER_ID, defaultRequest());
+            storeService.createStore(OWNER_ID, new StoreRequest(
+                    savedCategory.getCategoryId(), otherRegion.getRegionId(),
+                    "부산 가게", "부산시 해운대구", "01011112222", null, 5000));
+
+            Page<StoreResponse> result = storeService.getStores(
+                    null, savedRegion.getRegionId(), null, null, PageRequest.of(0, 10));
+
+            assertThat(result.getContent()).allMatch(s -> s.regionId().equals(savedRegion.getRegionId()));
+        }
+
+        @Test
         @DisplayName("검색 결과가 없으면 빈 페이지를 반환한다.")
         void searchStores_no_result() {
-            Page<StoreResponse> result = storeService.getStores(null, null, "없는가게이름xyz", PageRequest.of(0, 10));
+            Page<StoreResponse> result = storeService.getStores(null, null, "없는가게이름xyz", null, PageRequest.of(0, 10));
 
             assertThat(result.getTotalElements()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("최신순으로 가게를 정렬한다.")
+        void searchStores_sort_by_created_at() {
+            storeService.createStore(OWNER_ID, defaultRequest());
+            storeService.createStore(OWNER_ID, new StoreRequest(
+                    savedCategory.getCategoryId(), savedRegion.getRegionId(),
+                    "다른 가게", "서울시 서초구", "01098765432", null, 5000));
+
+            Page<StoreResponse> result = storeService.getStores(
+                    null, null, null, StoreSortType.LATEST, PageRequest.of(0, 10));
+
+            assertThat(result.getContent()).isSortedAccordingTo(
+                    Comparator.comparing(StoreResponse::createdAt).reversed());
+        }
+
+        @Test
+        @DisplayName("평점 높은 순으로 가게를 정렬한다.")
+        void searchStores_sort_by_rating() {
+            storeService.createStore(OWNER_ID, defaultRequest());
+            storeService.createStore(OWNER_ID, new StoreRequest(
+                    savedCategory.getCategoryId(), savedRegion.getRegionId(),
+                    "다른 가게", "서울시 서초구", "01098765432", null, 5000));
+
+            Page<StoreResponse> result = storeService.getStores(
+                    null, null, null, StoreSortType.RATING_HIGH, PageRequest.of(0, 10));
+
+            assertThat(result.getContent()).isSortedAccordingTo(
+                    Comparator.comparingDouble(StoreResponse::averageRating).reversed());
+        }
+
+        @Test
+        @DisplayName("회원 탈퇴 이벤트가 발생해도 가게는 삭제되지 않는다.")
+        void store_persists_after_user_deletion() {
+            storeService.createStore(OWNER_ID, defaultRequest());
+
+            applicationEventPublisher.publishEvent(new UserDeletedEvent(OWNER_ID, "testuser"));
+
+            Page<StoreResponse> result = storeService.getStores(null, null, null, null, PageRequest.of(0, 10));
+            assertThat(result.getContent()).anyMatch(s -> s.name().equals("테스트 가게"));
         }
     }
 

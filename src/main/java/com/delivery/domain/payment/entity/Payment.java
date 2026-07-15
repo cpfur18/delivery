@@ -76,9 +76,19 @@ public class Payment extends BaseEntity {
         return this.paymentStatus == PaymentStatus.CANCELED;
     }
 
+    public boolean isRefunded() {
+        return this.paymentStatus == PaymentStatus.REFUNDED;
+    }
+
     public void cancel(String cancelReason) {
         this.paymentStatus = PaymentStatus.CANCELED;
         this.cancelReason = cancelReason;
+        this.canceledAt = LocalDateTime.now();
+    }
+
+    public void refund(String refundReason) {
+        this.paymentStatus = PaymentStatus.REFUNDED;
+        this.cancelReason = refundReason;
         this.canceledAt = LocalDateTime.now();
     }
 }
