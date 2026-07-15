@@ -3,7 +3,6 @@ package com.delivery.domain.store.service;
 import com.delivery.domain.menu.service.MenuService;
 import com.delivery.domain.review.entity.Review;
 import com.delivery.domain.review.repository.ReviewRepository;
-import com.delivery.domain.review.service.ReviewService;
 import com.delivery.domain.store.dto.request.StoreRequest;
 import com.delivery.domain.store.dto.response.StoreResponse;
 import com.delivery.domain.store.entity.Store;
@@ -62,13 +61,15 @@ public class StoreService {
         return StoreResponse.from(storeRepository.save(store));
     }
 
-    public Page<StoreResponse> getStores(UUID categoryId, UUID regionId, String name, Pageable pageable) {
+    public Page<StoreResponse> getStores(
+            UUID categoryId, UUID regionId, String name, Pageable pageable) {
         int size = pageable.getPageSize();
         if (size != 10 && size != 30 && size != 50) {
             size = 10;
         }
         Pageable validatedPageable = PageRequest.of(pageable.getPageNumber(), size);
-        return storeRepository.searchStores(categoryId, name, validatedPageable)
+        return storeRepository
+                .searchStores(categoryId, name, validatedPageable)
                 .map(StoreResponse::from);
     }
 
@@ -86,7 +87,8 @@ public class StoreService {
     }
 
     @Transactional
-    public StoreResponse updateStore(UUID storeId, Long userId, boolean isElevated, StoreRequest request) {
+    public StoreResponse updateStore(
+            UUID storeId, Long userId, boolean isElevated, StoreRequest request) {
         Store store = getStoreWithOwnerCheck(storeId, userId, isElevated);
         categoryRepository
                 .findById(request.categoryId())
@@ -99,7 +101,8 @@ public class StoreService {
     }
 
     @Transactional
-    public StoreResponse updateStoreStatus(UUID storeId, Long userId, boolean isElevated, Boolean isOpen) {
+    public StoreResponse updateStoreStatus(
+            UUID storeId, Long userId, boolean isElevated, Boolean isOpen) {
         Store store = getStoreWithOwnerCheck(storeId, userId, isElevated);
         store.updateStatus(isOpen);
         return StoreResponse.from(store);
