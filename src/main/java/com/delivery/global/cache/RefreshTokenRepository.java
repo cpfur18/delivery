@@ -6,12 +6,9 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
 import java.util.UUID;
 
-/**
- * 리프래시 토큰 캐시
- */
+/** 리프래시 토큰 캐시 */
 @Repository
 public class RefreshTokenRepository implements BaseCacheRepository<UUID, String> {
     private final Cache cache;
@@ -27,12 +24,16 @@ public class RefreshTokenRepository implements BaseCacheRepository<UUID, String>
     }
 
     @Override
-    public Optional<String> findByKey(UUID key) {
-        return Optional.ofNullable(cache.get(key, String.class));
+    public String findByKey(UUID key) {
+        return cache.get(key, String.class);
     }
 
     @Override
     public void delete(UUID key) {
         cache.evict(key);
+    }
+
+    public void deleteAll() {
+        cache.clear();
     }
 }
