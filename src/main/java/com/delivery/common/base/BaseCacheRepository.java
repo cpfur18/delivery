@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface BaseCacheRepository<K, V> {
     void save(K key, V value);
 
-    Optional<V> findByKey(K key);
+    V findByKey(K key);
 
     void delete(K key);
 }
