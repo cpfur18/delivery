@@ -35,11 +35,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     @EntityGraph(attributePaths = "roles")
     Optional<User> findWithRolesById(Long id);
 
-    @EntityGraph(attributePaths = "roles")
-    List<User> findAllBy();
-
-    Optional<User> findByUsernameAndDeletedAtIsNull(String id);
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.id = :userId and u.deletedAt is null")
     Optional<User> findByIdForUpdate(@Param("userId") Long userId);
