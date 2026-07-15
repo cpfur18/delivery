@@ -542,6 +542,61 @@ class PaymentServiceUnitTest {
         }
     }
 
+    @Nested
+    @DisplayName("가게 거절 자동 환불")
+    class RefundPaymentByStoreRejection {
+
+        @Test
+        @DisplayName("결제 상태를 REFUNDED로 변경한다")
+        void refundPaymentByStoreRejection_success() {
+            UUID orderId = UUID.randomUUID();
+            Payment payment = createPayment(UUID.randomUUID(), orderId, 1L, PaymentStatus.PAID);
+
+            when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
+
+            PaymentResponse response =
+                    paymentService.refundPaymentByStoreRejection(orderId, "가게 거절 환불");
+
+            assertThat(response.paymentStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        }
+
+        @Test
+        @DisplayName("이미 취소된 결제는 환불할 수 없다")
+        void refundPaymentByStoreRejection_fail_when_payment_already_canceled() {
+            UUID orderId = UUID.randomUUID();
+            Payment payment =
+                    createPayment(UUID.randomUUID(), orderId, 1L, PaymentStatus.CANCELED);
+
+            when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
+
+            assertThatThrownBy(
+                            () ->
+                                    paymentService.refundPaymentByStoreRejection(
+                                            orderId, "가게 거절 환불"))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.PAYMENT_ALREADY_CANCELED);
+        }
+
+        @Test
+        @DisplayName("이미 환불된 결제는 다시 환불할 수 없다")
+        void refundPaymentByStoreRejection_fail_when_payment_already_refunded() {
+            UUID orderId = UUID.randomUUID();
+            Payment payment =
+                    createPayment(UUID.randomUUID(), orderId, 1L, PaymentStatus.REFUNDED);
+
+            when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
+
+            assertThatThrownBy(
+                            () ->
+                                    paymentService.refundPaymentByStoreRejection(
+                                            orderId, "가게 거절 환불"))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.PAYMENT_ALREADY_REFUNDED);
+        }
+    }
+
     private Payment createPayment(
             UUID paymentId, UUID orderId, Long userId, PaymentStatus paymentStatus) {
         return Payment.builder()

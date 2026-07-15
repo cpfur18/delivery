@@ -106,6 +106,26 @@ public class PaymentService {
         return PaymentResponse.from(payment);
     }
 
+    @Transactional
+    public PaymentResponse refundPaymentByStoreRejection(UUID orderId, String refundReason) {
+        Payment payment = getPaymentByOrderIdOrThrow(orderId);
+
+        if (payment.isCanceled()) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_ALREADY_CANCELED);
+        }
+
+        if (payment.isRefunded()) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_ALREADY_REFUNDED);
+        }
+
+        if (payment.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_REFUND_STATE_INVALID);
+        }
+
+        payment.refund(refundReason);
+        return PaymentResponse.from(payment);
+    }
+
     private Payment getPaymentOrThrow(UUID paymentId) {
         return paymentRepository
                 .findById(paymentId)
@@ -119,6 +139,12 @@ public class PaymentService {
     private Order getOrderOrThrow(UUID orderId) {
         return orderRepository
                 .findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    private Payment getPaymentByOrderIdOrThrow(UUID orderId) {
+        return paymentRepository
+                .findByOrderId(orderId)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
     }
 

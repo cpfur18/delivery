@@ -23,6 +23,15 @@ import com.delivery.global.exception.BusinessException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -440,6 +449,30 @@ class OrderServiceTest {
 
             // then
             assertThat(response.status()).isEqualTo(OrderStatus.ACCEPTED);
+        }
+
+        @Test
+        @DisplayName("가게가 주문을 거절하면 결제를 자동 환불한 뒤 상태를 REJECTED로 변경한다")
+        void reject_order_refunds_payment_before_status_change() {
+            Order order = createOrder(customerId, storeId);
+            Store store = createStore(storeId, ownerId);
+
+            given(orderRepository.findByIdAndDeletedAtIsNull(order.getId()))
+                    .willReturn(Optional.of(order));
+            given(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId))
+                    .willReturn(Optional.of(store));
+
+            Set<String> roles = Set.of("ROLE_OWNER");
+
+            OrderStatusResponse response =
+                    orderService.changeStoreOrderStatus(
+                            storeId, order.getId(), OrderStatus.REJECTED, ownerId, roles);
+
+            assertThat(response.status()).isEqualTo(OrderStatus.REJECTED);
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.REJECTED);
+            verify(paymentService)
+                    .refundPaymentByStoreRejection(
+                            eq(order.getId()), eq("가게가 주문을 거절하여 자동 환불되었습니다."));
         }
     }
 

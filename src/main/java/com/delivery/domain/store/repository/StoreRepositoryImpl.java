@@ -42,8 +42,35 @@ public class StoreRepositoryImpl implements StoreRepositoryCustom {
                                 categoryIdEq(categoryId),
                                 nameContains(name))
                         .fetchCount();
+    public Page<Store> searchStores(UUID categoryId, UUID regionId, String name, Pageable pageable) {
+        List<Store> content = queryFactory
+                .selectFrom(store)
+                .where(
+                        store.deletedAt.isNull(),
+                        categoryIdEq(categoryId),
+                        regionIdEq(regionId),
+                        nameContains(name)
+                )
+                .orderBy(store.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        long total = queryFactory
+                .selectFrom(store)
+                .where(
+                        store.deletedAt.isNull(),
+                        categoryIdEq(categoryId),
+                        regionIdEq(regionId),
+                        nameContains(name)
+                )
+                .fetchCount();
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    private BooleanExpression regionIdEq(UUID regionId) {
+        return regionId != null ? store.regionId.eq(regionId) : null;
     }
 
     private BooleanExpression categoryIdEq(UUID categoryId) {
