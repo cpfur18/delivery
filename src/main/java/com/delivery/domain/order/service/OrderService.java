@@ -375,6 +375,11 @@ public class OrderService {
         validateStatusTransition(order, nextStatus);
 
         // 모든 검증을 통과하면 주문 상태 변경
+        if (nextStatus == OrderStatus.REJECTED) {
+            paymentService.refundPaymentByStoreRejection(
+                    order.getId(), "가게가 주문을 거절하여 자동 환불되었습니다.");
+        }
+
         order.changeStatus(nextStatus);
 
         return OrderStatusResponse.from(order);
