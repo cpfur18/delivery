@@ -12,12 +12,15 @@ import com.delivery.domain.store.exception.StoreException;
 import com.delivery.domain.store.repository.CategoryRepository;
 import com.delivery.domain.store.repository.RegionRepository;
 import java.util.UUID;
+
+import com.delivery.domain.user.UserDeletedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,8 @@ class StoreServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private StoreService storeService;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private RegionRepository regionRepository;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private Category savedCategory;
     private Region savedRegion;
@@ -180,6 +185,17 @@ class StoreServiceIntegrationTest extends AbstractIntegrationTest {
             Page<StoreResponse> result = storeService.getStores(null, null, "없는가게이름xyz", PageRequest.of(0, 10));
 
             assertThat(result.getTotalElements()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("회원 탈퇴 이벤트가 발생해도 가게는 삭제되지 않는다.")
+        void store_persists_after_user_deletion() {
+            storeService.createStore(OWNER_ID, defaultRequest());
+
+            applicationEventPublisher.publishEvent(new UserDeletedEvent(OWNER_ID, "testuser"));
+
+            Page<StoreResponse> result = storeService.getStores(null, null, null, PageRequest.of(0, 10));
+            assertThat(result.getContent()).anyMatch(s -> s.name().equals("테스트 가게"));
         }
     }
 
