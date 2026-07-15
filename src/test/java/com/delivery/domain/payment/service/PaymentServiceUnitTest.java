@@ -271,8 +271,7 @@ class PaymentServiceUnitTest {
                                             pageable.getPageSize() == 10
                                                     && "paidAt: DESC"
                                                             .equals(
-                                                                    pageable
-                                                                            .getSort()
+                                                                    pageable.getSort()
                                                                             .toString())));
         }
 
@@ -294,8 +293,7 @@ class PaymentServiceUnitTest {
                                             pageable.getPageSize() == 10
                                                     && "paidAt: DESC"
                                                             .equals(
-                                                                    pageable
-                                                                            .getSort()
+                                                                    pageable.getSort()
                                                                             .toString())));
         }
     }
@@ -381,8 +379,7 @@ class PaymentServiceUnitTest {
                                             pageable.getPageSize() == 10
                                                     && "paidAt: DESC"
                                                             .equals(
-                                                                    pageable
-                                                                            .getSort()
+                                                                    pageable.getSort()
                                                                             .toString())));
         }
     }
@@ -397,11 +394,13 @@ class PaymentServiceUnitTest {
             UUID paymentId = UUID.randomUUID();
             UUID orderId = UUID.randomUUID();
             Payment payment = createPayment(paymentId, orderId, 1L, PaymentStatus.CANCELED);
-            Order order = createOrder(orderId, 1L, OrderStatus.CUSTOMER_CANCELLED, LocalDateTime.now());
+            Order order =
+                    createOrder(orderId, 1L, OrderStatus.CUSTOMER_CANCELLED, LocalDateTime.now());
             CustomUserDetails userDetails = createUserDetails(1L, Set.of(Role.CUSTOMER));
 
             when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
-            when(orderRepository.findByIdAndDeletedAtIsNull(orderId)).thenReturn(Optional.of(order));
+            when(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+                    .thenReturn(Optional.of(order));
 
             assertThatThrownBy(() -> paymentService.cancelPayment(paymentId, "고객 요청", userDetails))
                     .isInstanceOf(PaymentException.class)
@@ -430,11 +429,17 @@ class PaymentServiceUnitTest {
             UUID paymentId = UUID.randomUUID();
             UUID orderId = UUID.randomUUID();
             Payment payment = createPayment(paymentId, orderId, 1L, PaymentStatus.PAID);
-            Order order = createOrder(orderId, 1L, OrderStatus.REQUESTED, LocalDateTime.now().minusMinutes(3));
+            Order order =
+                    createOrder(
+                            orderId,
+                            1L,
+                            OrderStatus.REQUESTED,
+                            LocalDateTime.now().minusMinutes(3));
             CustomUserDetails userDetails = createUserDetails(1L, Set.of(Role.CUSTOMER));
 
             when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
-            when(orderRepository.findByIdAndDeletedAtIsNull(orderId)).thenReturn(Optional.of(order));
+            when(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+                    .thenReturn(Optional.of(order));
 
             PaymentResponse response =
                     paymentService.cancelPayment(paymentId, "고객 요청", userDetails);
@@ -449,11 +454,17 @@ class PaymentServiceUnitTest {
             UUID paymentId = UUID.randomUUID();
             UUID orderId = UUID.randomUUID();
             Payment payment = createPayment(paymentId, orderId, 1L, PaymentStatus.PAID);
-            Order order = createOrder(orderId, 1L, OrderStatus.REQUESTED, LocalDateTime.now().minusMinutes(6));
+            Order order =
+                    createOrder(
+                            orderId,
+                            1L,
+                            OrderStatus.REQUESTED,
+                            LocalDateTime.now().minusMinutes(6));
             CustomUserDetails userDetails = createUserDetails(1L, Set.of(Role.CUSTOMER));
 
             when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
-            when(orderRepository.findByIdAndDeletedAtIsNull(orderId)).thenReturn(Optional.of(order));
+            when(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+                    .thenReturn(Optional.of(order));
 
             assertThatThrownBy(() -> paymentService.cancelPayment(paymentId, "고객 요청", userDetails))
                     .isInstanceOf(PaymentException.class)
@@ -467,11 +478,14 @@ class PaymentServiceUnitTest {
             UUID paymentId = UUID.randomUUID();
             UUID orderId = UUID.randomUUID();
             Payment payment = createPayment(paymentId, orderId, 1L, PaymentStatus.PAID);
-            Order order = createOrder(orderId, 1L, OrderStatus.ACCEPTED, LocalDateTime.now().minusMinutes(2));
+            Order order =
+                    createOrder(
+                            orderId, 1L, OrderStatus.ACCEPTED, LocalDateTime.now().minusMinutes(2));
             CustomUserDetails userDetails = createUserDetails(1L, Set.of(Role.CUSTOMER));
 
             when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
-            when(orderRepository.findByIdAndDeletedAtIsNull(orderId)).thenReturn(Optional.of(order));
+            when(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+                    .thenReturn(Optional.of(order));
 
             assertThatThrownBy(() -> paymentService.cancelPayment(paymentId, "고객 요청", userDetails))
                     .isInstanceOf(PaymentException.class)
@@ -485,11 +499,17 @@ class PaymentServiceUnitTest {
             UUID paymentId = UUID.randomUUID();
             UUID orderId = UUID.randomUUID();
             Payment payment = createPayment(paymentId, orderId, 1L, PaymentStatus.PAID);
-            Order order = createOrder(orderId, 1L, OrderStatus.REQUESTED, LocalDateTime.now().minusMinutes(1));
+            Order order =
+                    createOrder(
+                            orderId,
+                            1L,
+                            OrderStatus.REQUESTED,
+                            LocalDateTime.now().minusMinutes(1));
             CustomUserDetails userDetails = createUserDetails(99L, Set.of(Role.MANAGER));
 
             when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
-            when(orderRepository.findByIdAndDeletedAtIsNull(orderId)).thenReturn(Optional.of(order));
+            when(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+                    .thenReturn(Optional.of(order));
 
             PaymentResponse response =
                     paymentService.cancelPayment(paymentId, "관리자 취소", userDetails);
@@ -519,6 +539,61 @@ class PaymentServiceUnitTest {
 
             assertThat(response.paymentStatus()).isEqualTo(PaymentStatus.CANCELED);
             assertThat(order.getStatus()).isEqualTo(OrderStatus.CUSTOMER_CANCELLED);
+        }
+    }
+
+    @Nested
+    @DisplayName("가게 거절 자동 환불")
+    class RefundPaymentByStoreRejection {
+
+        @Test
+        @DisplayName("결제 상태를 REFUNDED로 변경한다")
+        void refundPaymentByStoreRejection_success() {
+            UUID orderId = UUID.randomUUID();
+            Payment payment = createPayment(UUID.randomUUID(), orderId, 1L, PaymentStatus.PAID);
+
+            when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
+
+            PaymentResponse response =
+                    paymentService.refundPaymentByStoreRejection(orderId, "가게 거절 환불");
+
+            assertThat(response.paymentStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        }
+
+        @Test
+        @DisplayName("이미 취소된 결제는 환불할 수 없다")
+        void refundPaymentByStoreRejection_fail_when_payment_already_canceled() {
+            UUID orderId = UUID.randomUUID();
+            Payment payment =
+                    createPayment(UUID.randomUUID(), orderId, 1L, PaymentStatus.CANCELED);
+
+            when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
+
+            assertThatThrownBy(
+                            () ->
+                                    paymentService.refundPaymentByStoreRejection(
+                                            orderId, "가게 거절 환불"))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.PAYMENT_ALREADY_CANCELED);
+        }
+
+        @Test
+        @DisplayName("이미 환불된 결제는 다시 환불할 수 없다")
+        void refundPaymentByStoreRejection_fail_when_payment_already_refunded() {
+            UUID orderId = UUID.randomUUID();
+            Payment payment =
+                    createPayment(UUID.randomUUID(), orderId, 1L, PaymentStatus.REFUNDED);
+
+            when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
+
+            assertThatThrownBy(
+                            () ->
+                                    paymentService.refundPaymentByStoreRejection(
+                                            orderId, "가게 거절 환불"))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.PAYMENT_ALREADY_REFUNDED);
         }
     }
 
@@ -567,8 +642,6 @@ class PaymentServiceUnitTest {
                 .id(id)
                 .username("tester")
                 .password("password")
-                .nickName("tester")
-                .phoneNumber("01012345678")
                 .authorities(
                         roles.stream()
                                 .map(role -> new SimpleGrantedAuthority(role.getAuthority()))
