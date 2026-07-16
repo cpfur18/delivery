@@ -19,6 +19,7 @@ import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.fixture.UserFixture;
 import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
+import com.delivery.global.cache.WithdrawnUserRepository;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.delivery.testutil.ConcurrencyTestingUtil;
@@ -49,6 +50,7 @@ class AuthServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private RefreshTokenRepository refreshTokenRepository;
     @Autowired private JwtUtil jwtUtil;
+    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     @AfterEach
     void tearDown() {

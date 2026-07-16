@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.Comparator;
 
 import com.delivery.domain.user.UserDeletedEvent;
+import com.delivery.global.cache.WithdrawnUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -40,8 +41,8 @@ class StoreServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private StoreService storeService;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private RegionRepository regionRepository;
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+    @Autowired private ApplicationEventPublisher applicationEventPublisher;
+    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     private Category savedCategory;
     private Region savedRegion;
