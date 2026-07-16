@@ -76,6 +76,11 @@ public class UserAdminService {
         userCacheRepository.delete(user.getUserUuid());
     }
 
+    /**
+     * 페이징 검색 사이즈 체크 및 변환
+     * @param pageable
+     * @return
+     */
     private Pageable validatedPageable(Pageable pageable) {
         int size = (pageable != null) ? pageable.getPageSize() : 10;
         int validatedSize = Set.of(10, 20, 30).contains(size) ? size : 10;
@@ -86,6 +91,7 @@ public class UserAdminService {
                 (pageable != null) ? pageable.getSort() : Sort.unsorted());
     }
 
+    // 검색 조권 쿼리
     private Specification<User> createUserSpecification(UserSearchRequest request) {
         Specification<User> spec = Specification.allOf();
 

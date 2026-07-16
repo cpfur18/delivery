@@ -17,6 +17,8 @@ import com.delivery.domain.user.fixture.UserFixture;
 import com.delivery.domain.user.repository.AddressRepository;
 import com.delivery.domain.user.repository.UserRepository;
 import java.util.*;
+
+import com.delivery.global.cache.WithdrawnUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -34,6 +36,7 @@ public class AddressServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired JdbcTemplate jdbcTemplate;
+    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     private User savedUser;
     // 0번 기본 true, 1번 False
