@@ -14,9 +14,8 @@ import com.delivery.domain.user.exception.UserErrorCode;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.fixture.UserFixture;
 import com.delivery.domain.user.repository.UserRepository;
-import java.util.Optional;
-
 import com.delivery.global.cache.UserCacheRepository;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -69,12 +68,9 @@ class UserAdminServiceUnitTest {
             when(userRepository.findWithRolesById(eq(userId))).thenReturn(Optional.empty());
 
             // when & then
-            UpdateUserRoleRequest request = new UpdateUserRoleRequest(Role.OWNER); // 테스트용 객체 생성
-            assertThatThrownBy(() -> userAdminService.updateUserRole(userId, request))
+            assertThatThrownBy(() -> userAdminService.findUserInfo(userId))
                     .isInstanceOf(UserException.class)
                     .hasMessage(UserErrorCode.NOT_EXIST_USER.getMessage());
-
-            verify(userRepository, never()).save(any());
         }
     }
 
@@ -95,6 +91,7 @@ class UserAdminServiceUnitTest {
 
             // then
             assertThat(user.getRoles().contains(Role.OWNER)).isTrue();
+            verify(userCacheRepository, times(1)).delete(any());
         }
 
         @Test

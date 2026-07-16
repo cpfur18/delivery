@@ -124,12 +124,9 @@ class AuthServiceUnitTest {
             String refreshToken = "asdzxcvbn";
 
             // when & then
-            assertThatThrownBy(
-                    () ->
-                        authService.refresh(refreshToken))
+            assertThatThrownBy(() -> authService.refresh(refreshToken))
                     .isInstanceOf(AuthException.class)
-                    .hasMessage(
-                            AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
+                    .hasMessage(AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
         }
     }
 }

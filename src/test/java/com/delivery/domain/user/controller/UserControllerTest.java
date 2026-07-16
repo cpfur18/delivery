@@ -17,7 +17,6 @@ import com.delivery.domain.user.dto.request.UpdatePhoneNumberRequest;
 import com.delivery.domain.user.dto.response.UserResponse;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.service.UserService;
-
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
