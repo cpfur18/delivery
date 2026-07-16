@@ -16,7 +16,7 @@ public class WithdrawnUserRepository implements BaseCacheRepository<UUID, Boolea
     private final Cache cache;
 
     public WithdrawnUserRepository(CacheManager cacheManager) {
-        this.cache = cacheManager.getCache(CacheType.DRAWN_USER.name());
+        this.cache = cacheManager.getCache(CacheType.WITHDRAWN_USER.name());
     }
 
     @Override

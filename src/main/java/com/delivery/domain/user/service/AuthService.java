@@ -166,7 +166,6 @@ public class AuthService {
 
             CustomUserDetails userDetails = CustomUserDetails.from(user);
             AuthResponse response = createAuthResponse(userDetails);
-
             refreshTokenRepository.delete(sessionId);
 
             return response;
