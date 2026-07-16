@@ -13,6 +13,7 @@ import com.delivery.domain.user.entity.User;
 import com.delivery.domain.user.fixture.UserFixture;
 import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.UserCacheRepository;
+import com.delivery.global.cache.WithdrawnUserRepository;
 import com.delivery.global.config.JwtProperties;
 import com.delivery.global.security.config.CustomUserDetailsService;
 import jakarta.persistence.EntityManager;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
@@ -34,6 +36,7 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private JwtProperties jwtProperties;
     @Autowired private UserCacheRepository userCacheRepository;
     @Autowired private CustomUserDetailsService customUserDetailsService;
+    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     private User savedUser;
     private long userId;

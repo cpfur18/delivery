@@ -12,11 +12,14 @@ import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.cache.UserCacheRepository;
+import com.delivery.global.cache.WithdrawnUserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -26,6 +29,7 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final UserCacheRepository userCacheRepository;
+    private final WithdrawnUserRepository withdrawnUserRepository;
 
     /**
      * 회원 자신 정보 조회
@@ -79,14 +83,19 @@ public class UserService {
     }
 
     /**
-     * 회원 삭제 탈퇴 후 이벤트 발생
-     *
+     * 회원  탈퇴
+     * User 캐시 삭제 후, 탈퇴 회원 캐시 저장
      * @param userId 탈퇴 회원 PK키
      */
     public void deleteUser(Long userId) {
         User deletedUser = findActiveUser(userId);
-        userCacheRepository.delete(deletedUser.getUserUuid());
+        UUID userUuid = deletedUser.getUserUuid();
+
         deletedUser.delete(deletedUser.getUsername());
+
+        userCacheRepository.delete(userUuid);
+        withdrawnUserRepository.save(userUuid, true);
+
         applicationEventPublisher.publishEvent(
                 new UserDeletedEvent(deletedUser.getId(), deletedUser.getUsername()));
     }
@@ -120,7 +129,7 @@ public class UserService {
     }
 
     /**
-     * 활성화 회원 조회
+     * ACTIVE 회원 조회
      *
      * @param userId 회원 PK키
      * @return 조회한 회원 User 엔티티 객체 반환

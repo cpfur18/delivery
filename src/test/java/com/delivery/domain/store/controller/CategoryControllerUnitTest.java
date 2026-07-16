@@ -14,6 +14,7 @@ import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.BlackListRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.cache.UserCacheRepository;
+import com.delivery.global.cache.WithdrawnUserRepository;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.config.CustomUserDetailsService;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -54,6 +56,7 @@ class CategoryControllerUnitTest {
     @MockitoBean private CustomUserDetailsService customUserDetailsService;
     @MockitoBean private BlackListRepository blackListRepository;
     @MockitoBean private UserCacheRepository userCacheRepository;
+    @MockitoBean private WithdrawnUserRepository withdrawnUserRepository;
 
     @BeforeEach
     void setUpSecurityContext() {
