@@ -10,10 +10,9 @@ import com.delivery.domain.user.dto.response.UserAdminResponse;
 import com.delivery.domain.user.service.UserAdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,9 +37,15 @@ public class UserAdminController implements UserAdminApi {
     @PostMapping
     public ResponseEntity<RestApiResponse<PageResponse<UserAdminListResponse>>> getAllUserInfo(
             @RequestBody UserSearchRequest request,
-            @ParameterObject
-                    @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-                    Pageable pageable) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String[] sortType,
+            @RequestParam(defaultValue = "DESC") String directionType) {
+
+        Sort.Direction direction =
+                "ASC".equalsIgnoreCase(directionType) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortType));
 
         return ResponseEntity.ok(
                 RestApiResponse.success(

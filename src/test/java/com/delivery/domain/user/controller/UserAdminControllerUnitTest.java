@@ -12,9 +12,9 @@ import com.delivery.domain.user.dto.response.UserAdminResponse;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.entity.UserStatus;
 import com.delivery.domain.user.service.UserAdminService;
-
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -41,6 +41,7 @@ class UserAdminControllerUnitTest extends AbstractControllerTest {
                         "닉네임",
                         "01012345678",
                         UserStatus.ACTIVE,
+                        UUID.randomUUID(),
                         Set.of(Role.CUSTOMER),
                         LocalDateTime.now(),
                         LocalDateTime.now());
@@ -59,29 +60,29 @@ class UserAdminControllerUnitTest extends AbstractControllerTest {
         verify(userAdminService).findUserInfo(1L);
     }
 
+    //        @Test
+    //        @DisplayName("권한이 없을 시 유저 조회가 실패한다.")
+    //        @WithAnonymousUser
+    //        void findUserInfo_fail_when_role() throws Exception {
+    //            // given
+    //            given(userAdminService.findUserInfo(1L))
+    //                    .willThrow(new A));
+    //
+    //            // when & then
+    //            mockMvc.perform(
+    //                            get("/api/v1/admin/users/{userId}", 1L)
+    //                                    .contentType(MediaType.APPLICATION_JSON))
+    //                    .andExpect(status().isForbidden());
+    //
+    //            verify(userAdminService).findUserInfo(1L);
+    //        }
+    //
     //    @Test
-    //    @DisplayName("권한이 없을 시 유저 조회가 실패한다.")
-    //    @WithAnonymousUser
-    //    void findUserInfo_fail_when_role() throws Exception {
-    //        // given
-    //        given(userAdminService.findUserInfo(1L))
-    //                .willThrow(new AccessDeniedException("123"));
+    //    void getUserInfo() {}
     //
-    //        // when & then
-    //        mockMvc.perform(
-    //                        get("/api/v1/admin/users/{userId}", 1L)
-    //                                .contentType(MediaType.APPLICATION_JSON))
-    //                .andExpect(status().isForbidden());
+    //    @Test
+    //    void getAllUserInfo() {}
     //
-    //        verify(userAdminService).findUserInfo(1L);
-    //    }
-
-    @Test
-    void getUserInfo() {}
-
-    @Test
-    void getAllUserInfo() {}
-
-    @Test
-    void updateUserRole() {}
+    //    @Test
+    //    void updateUserRole() {}
 }

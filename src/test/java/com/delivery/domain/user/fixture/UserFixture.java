@@ -6,6 +6,7 @@ import com.delivery.domain.user.entity.User;
 import com.delivery.domain.user.entity.UserStatus;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -44,11 +45,12 @@ public enum UserFixture {
                 .build();
     }
 
-    public User createUserNoId() {
+    public User createUserNoId(String username, String nickname) {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
         return User.builder()
-                .username(username)
+                .username(username != null ? username : this.username)
                 .password(password)
-                .nickName(nickname)
+                .nickName(nickname != null ? nickname : this.nickname)
                 .phoneNumber(phoneNumber)
                 .userStatus(UserStatus.ACTIVE)
                 .roles(Set.of(role))
@@ -56,10 +58,11 @@ public enum UserFixture {
     }
 
     public User createDeletedUserNoId() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
         return User.builder()
-                .username(username)
+                .username(suffix)
                 .password(password)
-                .nickName(nickname)
+                .nickName(suffix)
                 .phoneNumber(phoneNumber)
                 .userStatus(UserStatus.DELETED)
                 .roles(Set.of(role))

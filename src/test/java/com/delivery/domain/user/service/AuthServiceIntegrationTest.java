@@ -1,5 +1,9 @@
 package com.delivery.domain.user.service;
 
+import static com.delivery.global.security.jwt.JwtHeaderType.REFRESH_TOKEN;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+
 import com.delivery.config.AbstractIntegrationTest;
 import com.delivery.config.WithMockCustomUser;
 import com.delivery.domain.user.dto.request.LoginRequest;
@@ -18,6 +22,12 @@ import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.delivery.testutil.ConcurrencyTestingUtil;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,17 +39,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.delivery.global.security.jwt.JwtHeaderType.REFRESH_TOKEN;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -93,20 +92,25 @@ class AuthServiceIntegrationTest extends AbstractIntegrationTest {
 
         // when
         List<Exception> failures = new CopyOnWriteArrayList<>();
-        ConcurrencyTestingUtil.run(threadCount, () -> {
-            try {
-                authService.signUp(request);
-                successCount.incrementAndGet();
-            } catch (Exception e) {
-                failures.add(e);
-            }
-        });
+        ConcurrencyTestingUtil.run(
+                threadCount,
+                () -> {
+                    try {
+                        authService.signUp(request);
+                        successCount.incrementAndGet();
+                    } catch (Exception e) {
+                        failures.add(e);
+                    }
+                });
 
-            assertThat(failures).hasSize(4);
-            assertThat(failures).allSatisfy(e -> {
-            assertThat(e).isInstanceOf(UserException.class);
-            assertThat(((UserException) e).getErrorCode()).isEqualTo(UserErrorCode.DUPLICATE_USERNAME);
-        });
+        assertThat(failures).hasSize(4);
+        assertThat(failures)
+                .allSatisfy(
+                        e -> {
+                            assertThat(e).isInstanceOf(UserException.class);
+                            assertThat(((UserException) e).getErrorCode())
+                                    .isEqualTo(UserErrorCode.DUPLICATE_USERNAME);
+                        });
     }
 
     @Test
@@ -146,7 +150,7 @@ class AuthServiceIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("리프래시 토큰 발급에 성공하면 액세스 토큰과 리프래시 토큰을 새로 발급한다.")
         void refresh_success() {
             // given
-            var user = userRepository.save(UserFixture.ROLE_CUSTOMER.createUserNoId());
+            var user = userRepository.save(UserFixture.ROLE_CUSTOMER.createUserNoId(null, null));
             CustomUserDetails userDetails = CustomUserDetails.from(user);
 
             UUID userUuid = userDetails.getUserUuid();
@@ -175,7 +179,7 @@ class AuthServiceIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("탈퇴하거나 존재하지 않는 회원이 리프래시 토큰 반환을 할 경우 404 (NOT_EXIST_USER) 예외를 반환한다.")
         void refresh_fail_when_not_exist_user() {
             // given
-            var user = userRepository.save(UserFixture.ROLE_CUSTOMER.createUserNoId());
+            var user = userRepository.save(UserFixture.ROLE_CUSTOMER.createUserNoId(null, null));
             CustomUserDetails userDetails = CustomUserDetails.from(user);
 
             UUID userUuid = userDetails.getUserUuid();

@@ -5,7 +5,6 @@ import com.delivery.domain.user.exception.AuthErrorCode;
 import com.delivery.domain.user.exception.UserErrorCode;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.global.cache.BlackListRepository;
-import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.cache.UserCacheRepository;
 import com.delivery.global.exception.ErrorCode;
 import com.delivery.global.security.config.CustomUserDetails;
@@ -43,7 +42,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String accessToken = jwtUtil.resolveAccessToken(request);
-        ErrorCode errorCode  = null;
+        ErrorCode errorCode = null;
         String username = null;
 
         if (accessToken != null) {
@@ -57,19 +56,20 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 username = jwtUtil.getUserUsernameFromToken(accessToken);
                 UUID userUuid = jwtUtil.getUserUuidFromAccessToken(accessToken);
 
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (username != null
+                        && SecurityContextHolder.getContext().getAuthentication() == null) {
                     CustomUserDetails userDetails = userCacheRepository.findByKey(userUuid);
 
                     try {
                         if (userDetails == null) {
                             userDetails = customUserDetailsService.loadUserByUuid(userUuid);
                             userCacheRepository.save(userUuid, userDetails);
-                            log.debug("Jwt 캐싱 {} : {}", userUuid, userDetails);
+                            log.info("Jwt 캐싱 {} : {}", userUuid, userDetails);
                         }
                     } catch (UserException e) {
                         errorCode = UserErrorCode.NOT_EXIST_USER;
                         setErrorResponse(response, errorCode);
-                        log.warn("존재하지 않는 회원입니다(UUID) : {}",  userUuid, e);
+                        log.warn("존재하지 않는 회원입니다(UUID) : {}", userUuid, e);
                         return;
                     }
 
@@ -78,7 +78,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     } else {
                         errorCode = AuthErrorCode.INVALID_ACCESS_TOKEN;
                         setErrorResponse(response, errorCode);
-                        logger.warn(errorCode.getMessage());
+                        log.warn(errorCode.getMessage());
                         return;
                     }
                 }
@@ -86,12 +86,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             } catch (IllegalArgumentException e) {
                 errorCode = AuthErrorCode.INVALID_ACCESS_TOKEN;
                 setErrorResponse(response, errorCode);
-                logger.warn(errorCode.getMessage(), e);
+                log.warn(errorCode.getMessage(), e);
                 return;
             } catch (ExpiredJwtException e) {
                 errorCode = AuthErrorCode.EXPIRED_ACCESS_TOKEN;
                 setErrorResponse(response, errorCode);
-                logger.warn(errorCode.getMessage(), e);
+                log.warn(errorCode.getMessage(), e);
                 return;
             }
         } else {
@@ -111,16 +111,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
     }
 
-    private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+    private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode)
+            throws IOException {
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        var errorResponse = RestApiResponse.fail(
-                errorCode.getHttpStatus(),
-                errorCode.getMessage(),
-                errorCode.getName()
-        );
+        var errorResponse =
+                RestApiResponse.fail(
+                        errorCode.getHttpStatus(), errorCode.getMessage(), errorCode.getName());
 
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }

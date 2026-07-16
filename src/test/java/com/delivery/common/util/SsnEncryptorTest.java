@@ -1,5 +1,8 @@
 package com.delivery.common.util;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+
 import com.delivery.global.exception.BusinessException;
 import com.delivery.global.exception.GlobalErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,11 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.security.crypto.encrypt.AesBytesEncryptor;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.when;
 
 class SsnEncryptorTest {
     private SsnEncryptor ssnEncryptor;
@@ -47,7 +45,7 @@ class SsnEncryptorTest {
     @DisplayName("암호화 시 Null 값이나 공백이 들어올 시 BAD_REQUEST 예외가 발생한다.")
     void encrpt_fail_null(String ssn) {
         // when & then
-        assertThatThrownBy(() ->ssnEncryptor.encrypt(ssn))
+        assertThatThrownBy(() -> ssnEncryptor.encrypt(ssn))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(GlobalErrorCode.BAD_REQUEST.getMessage());
     }
@@ -58,7 +56,7 @@ class SsnEncryptorTest {
     @DisplayName("복호화 시 Null 값이나 공백이 들어올 시 BAD_REQUEST 예외가 발생한다.")
     void decrypt_fail_null(String ssn) {
         // when & then
-        assertThatThrownBy(() ->ssnEncryptor.decrypt(ssn))
+        assertThatThrownBy(() -> ssnEncryptor.decrypt(ssn))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(GlobalErrorCode.BAD_REQUEST.getMessage());
     }
@@ -70,7 +68,7 @@ class SsnEncryptorTest {
         String encrypted = "test-base64-string";
 
         // when & then
-        assertThatThrownBy(() ->ssnEncryptor.decrypt(encrypted))
+        assertThatThrownBy(() -> ssnEncryptor.decrypt(encrypted))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(GlobalErrorCode.INTERNAL_SERVER_ERROR.getMessage());
     }

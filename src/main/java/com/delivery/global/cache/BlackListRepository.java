@@ -1,17 +1,14 @@
- package com.delivery.global.cache;
+package com.delivery.global.cache;
 
- import com.delivery.common.base.BaseCacheRepository;
- import com.delivery.common.util.CacheType;
- import java.util.Optional;
- import org.springframework.cache.Cache;
- import org.springframework.cache.CacheManager;
- import org.springframework.stereotype.Repository;
+import com.delivery.common.base.BaseCacheRepository;
+import com.delivery.common.util.CacheType;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Repository;
 
- /**
-  * 토큰 블랙리스트
-  */
- @Repository
- public class BlackListRepository implements BaseCacheRepository<String, String> {
+/** 토큰 블랙리스트 */
+@Repository
+public class BlackListRepository implements BaseCacheRepository<String, String> {
     private final Cache cache;
 
     public BlackListRepository(CacheManager cacheManager) {
@@ -32,4 +29,4 @@
     public void delete(String key) {
         cache.evict(key);
     }
- }
+}
