@@ -58,7 +58,7 @@ public class ReviewReplyService {
         ReviewReply reply =
                 new ReviewReply(
                         review,
-                        request.getContent(),
+                        request.content(),
                         ownerId);
 
         ReviewReply savedReply =
@@ -109,7 +109,7 @@ public class ReviewReplyService {
         validateReplyOwner(reply, ownerId);
 
         // Dirty Checking을 통해 답글 내용 수정
-        reply.update(request.getContent());
+        reply.update(request.content());
 
         log.info(
                 "리뷰 답글 수정 완료 - reviewId={}, replyId={}",
@@ -290,8 +290,8 @@ public class ReviewReplyService {
     // 답글 내용이 비어 있는지 검증
     private void validateReplyRequest(ReviewReplyRequest request) {
 
-        if (request.getContent() == null
-                || request.getContent().isBlank()) {
+        if (request.content() == null
+                || request.content().isBlank()) {
 
             log.warn("리뷰 답글 요청 검증 실패 - 답글 내용이 비어 있음");
 

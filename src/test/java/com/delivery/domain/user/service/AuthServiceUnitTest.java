@@ -7,9 +7,12 @@ import static org.mockito.Mockito.*;
 import com.delivery.domain.user.dto.request.LoginRequest;
 import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.entity.Role;
+import com.delivery.domain.user.exception.AuthErrorCode;
 import com.delivery.domain.user.exception.AuthException;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.repository.UserRepository;
+import com.delivery.global.cache.RefreshTokenRepository;
+import com.delivery.global.security.jwt.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +31,8 @@ class AuthServiceUnitTest {
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
+    @Mock private JwtUtil jwtUtil;
+    @Mock private RefreshTokenRepository refreshTokenRepository;
     @InjectMocks private AuthService authService;
 
     @Nested
@@ -109,6 +114,22 @@ class AuthServiceUnitTest {
 
             verify(authenticationManager)
                     .authenticate(any(UsernamePasswordAuthenticationToken.class));
+        }
+
+        @Test
+        @DisplayName("변형된 refresh token 요청 시 INVALID_REFRESH_TOKEN 예외 반환")
+        void refresh_fail_when_corrupted_token() {
+
+            // given
+            String refreshToken = "asdzxcvbn";
+
+            // when & then
+            assertThatThrownBy(
+                    () ->
+                        authService.refresh(refreshToken))
+                    .isInstanceOf(AuthException.class)
+                    .hasMessage(
+                            AuthErrorCode.INVALID_REFRESH_TOKEN.getMessage());
         }
     }
 }

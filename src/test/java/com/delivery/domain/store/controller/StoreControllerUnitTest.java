@@ -1,6 +1,7 @@
 package com.delivery.domain.store.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -10,9 +11,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.delivery.domain.store.dto.request.StoreRequest;
 import com.delivery.domain.store.dto.response.StoreResponse;
 import com.delivery.domain.store.service.StoreService;
+import com.delivery.global.cache.BlackListRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
+import com.delivery.global.cache.UserCacheRepository;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.config.CustomUserDetails;
+import com.delivery.global.security.config.CustomUserDetailsService;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -46,16 +50,21 @@ class StoreControllerUnitTest {
     @MockitoBean private JwtUtil jwtUtil;
     @MockitoBean private StoreService storeService;
     @MockitoBean private ErrorCodeRegistry errorCodeRegistry;
+    @MockitoBean private CustomUserDetailsService customUserDetailsService;
+    @MockitoBean private BlackListRepository blackListRepository;
+    @MockitoBean private UserCacheRepository userCacheRepository;
 
     @BeforeEach
     void setUpSecurityContext() {
-        CustomUserDetails mockUser = CustomUserDetails.builder()
-                .id(1L)
-                .username("testuser")
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_OWNER")))
-                .build();
+        CustomUserDetails mockUser =
+                CustomUserDetails.builder()
+                        .id(1L)
+                        .username("testuser")
+                        .authorities(List.of(new SimpleGrantedAuthority("ROLE_OWNER")))
+                        .build();
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(mockUser, null, mockUser.getAuthorities());
+        Authentication auth =
+                new UsernamePasswordAuthenticationToken(mockUser, null, mockUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
@@ -120,14 +129,15 @@ class StoreControllerUnitTest {
         @DisplayName("가게 등록 시 이름이 빈 값이면 400 반환")
         void createStore_fail_when_invalid() throws Exception {
             // given
-            StoreRequest request = new StoreRequest(
-                    UUID.randomUUID(),
-                    UUID.randomUUID(),
-                    "",
-                    "서울시 강남구",
-                    "01012345678",
-                    "테스트",
-                    10000);
+            StoreRequest request =
+                    new StoreRequest(
+                            UUID.randomUUID(),
+                            UUID.randomUUID(),
+                            "",
+                            "서울시 강남구",
+                            "01012345678",
+                            "테스트",
+                            10000);
 
             // when & then
             mockMvc.perform(
@@ -173,7 +183,7 @@ class StoreControllerUnitTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("가게 삭제 성공"));
 
-            verify(storeService).deleteStore(eq(storeId), any(), any(), any());
+            verify(storeService).deleteStore(eq(storeId), any(), anyBoolean(), any());
         }
     }
 }

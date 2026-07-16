@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.delivery.config.AbstractControllerTest;
 import com.delivery.config.WithMockCustomUser;
 import com.delivery.domain.user.dto.request.CreateAddressRequest;
 import com.delivery.domain.user.dto.request.UpdateAddressRequest;
@@ -18,7 +19,10 @@ import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.service.AddressService;
 import com.delivery.global.cache.BlackListRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
+import com.delivery.global.cache.UserCacheRepository;
 import com.delivery.global.exception.ErrorCodeRegistry;
+import com.delivery.global.exception.GlobalErrorCode;
+import com.delivery.global.security.config.CustomUserDetailsService;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -35,14 +39,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AddressController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class AddressControllerUnitTest {
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-
-    @MockitoBean private RefreshTokenRepository refreshTokenRepository;
-    @MockitoBean private AddressService addressService;
-    @MockitoBean private JwtUtil jwtUtil;
-    @MockitoBean ErrorCodeRegistry errorCodeRegistry;
+class AddressControllerUnitTest extends AbstractControllerTest {
+    @MockitoBean AddressService addressService;
 
     private final UUID addressId = UUID.randomUUID();
     private final CreateAddressRequest request = new CreateAddressRequest("주소1", "상세주소1", true);
@@ -82,7 +80,7 @@ class AddressControllerUnitTest {
 
         @Test
         @WithMockCustomUser(id = 1L, role = "CUSTOMER")
-        @DisplayName("배송지 입력 값이 비었을 때 INVALID_PARAMETER_TYPE 예외를 반환한다.")
+        @DisplayName("배송지 입력 값이 비었을 때 REQUIRED_VALUE 예외를 반환한다.")
         void createAddress_fail() throws Exception {
             // given
             CreateAddressRequest request = new CreateAddressRequest("", "상세주소1", true);
@@ -94,7 +92,7 @@ class AddressControllerUnitTest {
                                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.error").value("INVALID_PARAMETER_TYPE"));
+                    .andExpect(jsonPath("$.error").value(GlobalErrorCode.REQUIRED_VALUE.toString()));
 
             verifyNoInteractions(addressService);
         }
