@@ -206,28 +206,28 @@ domain
 
 주요 엔드포인트만 정리했습니다. 전체 목록은 실행 후 Swagger(`/swagger-ui/index.html`)에서 확인할 수 있습니다.
 
-| Resource | Method | URI | 설명 | 권한 |
-|---|---|---|---|---|
-| 인증 | POST | `/api/v1/auth` | 회원가입 | 공개 |
-| | POST | `/api/v1/auth/login` | 로그인 | 공개 |
-| | POST | `/api/v1/auth/refresh` | Access Token 재발급 | 로그인 필요 |
-| | POST | `/api/v1/auth/logout` | 로그아웃 | 로그인 필요 |
-| 가게 | POST | `/api/v1/stores` | 가게 등록 | OWNER |
-| | GET | `/api/v1/stores` | 가게 목록 조회 | 공개 |
-| | PATCH | `/api/v1/stores/{storeId}/status` | 영업 상태 변경 | OWNER 본인 소유 |
-| 메뉴 | POST | `/api/v1/stores/{storeId}/menus` | 메뉴 등록(AI 설명 생성 포함) | OWNER 본인 소유 |
-| | GET | `/api/v1/menus` | 전체 메뉴 검색 | 로그인 필요 |
-| 장바구니 | POST | `/api/v1/carts/items` | 장바구니에 메뉴 담기 | CUSTOMER |
-| 주문 | POST | `/api/v1/orders` | 주문 생성 | CUSTOMER |
-| | PATCH | `/api/v1/stores/{storeId}/orders/{orderId}/accept` | 주문 수락 | OWNER 본인 소유 |
-| | PATCH | `/api/v1/orders/{orderId}/complete` | 주문 완료 처리 | CUSTOMER 본인 |
-| 결제 | GET | `/api/v1/payments/me` | 내 결제 내역 조회 | CUSTOMER |
-| | PATCH | `/api/v1/payments/{paymentId}/cancel` | 결제 취소 | CUSTOMER 본인 |
-| 리뷰 | POST | `/api/v1/reviews` | 리뷰 작성 | CUSTOMER |
-| | GET | `/api/v1/stores/{storeId}/reviews` | 가게 리뷰 목록 조회 | 공개 |
-| 리뷰 답글 | POST | `/api/v1/reviews/{reviewId}/replies` | 답글 작성 | OWNER 본인 소유 |
+| Resource | Method | URI | 설명 | 권한             |
+|---|---|---|---|----------------|
+| 인증 | POST | `/api/v1/auth` | 회원가입 | 공개             |
+| | POST | `/api/v1/auth/login` | 로그인 | 공개             |
+| | POST | `/api/v1/auth/refresh` | Access Token 재발급 | 공개             |
+| | POST | `/api/v1/auth/logout` | 로그아웃 | 로그인 필요         |
+| 가게 | POST | `/api/v1/stores` | 가게 등록 | OWNER          |
+| | GET | `/api/v1/stores` | 가게 목록 조회 | 공개             |
+| | PATCH | `/api/v1/stores/{storeId}/status` | 영업 상태 변경 | OWNER 본인 소유    |
+| 메뉴 | POST | `/api/v1/stores/{storeId}/menus` | 메뉴 등록(AI 설명 생성 포함) | OWNER 본인 소유    |
+| | GET | `/api/v1/menus` | 전체 메뉴 검색 | 로그인 필요         |
+| 장바구니 | POST | `/api/v1/carts/items` | 장바구니에 메뉴 담기 | CUSTOMER       |
+| 주문 | POST | `/api/v1/orders` | 주문 생성 | CUSTOMER       |
+| | PATCH | `/api/v1/stores/{storeId}/orders/{orderId}/accept` | 주문 수락 | OWNER 본인 소유    |
+| | PATCH | `/api/v1/orders/{orderId}/complete` | 주문 완료 처리 | CUSTOMER 본인    |
+| 결제 | GET | `/api/v1/payments/me` | 내 결제 내역 조회 | CUSTOMER       |
+| | PATCH | `/api/v1/payments/{paymentId}/cancel` | 결제 취소 | CUSTOMER 본인    |
+| 리뷰 | POST | `/api/v1/reviews` | 리뷰 작성 | CUSTOMER       |
+| | GET | `/api/v1/stores/{storeId}/reviews` | 가게 리뷰 목록 조회 | 공개             |
+| 리뷰 답글 | POST | `/api/v1/reviews/{reviewId}/replies` | 답글 작성 | OWNER 본인 소유    |
 | AI | GET | `/api/v1/ai-logs` | AI 요청 로그 조회 | MANAGER/MASTER |
-| | GET | `/api/v1/stores/{storeId}/review-summary` | 가게 리뷰 요약 조회 | 공개 |
+| | GET | `/api/v1/stores/{storeId}/review-summary` | 가게 리뷰 요약 조회 | 공개             |
 
 ---
 
