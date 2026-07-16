@@ -50,6 +50,9 @@ public class AuthController implements AuthApi {
     @PostMapping("/refresh")
     public ResponseEntity<RestApiResponse<AuthResponse>> refreshToken(HttpServletRequest request) {
         return ResponseEntity.ok(
-                RestApiResponse.success(HttpStatus.OK, "리프래시 토큰 발급 성공", authService.refresh(jwtUtil.resolveRefreshToken(request))));
+                RestApiResponse.success(
+                        HttpStatus.OK,
+                        "리프래시 토큰 발급 성공",
+                        authService.refresh(jwtUtil.resolveRefreshToken(request))));
     }
 }

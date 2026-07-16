@@ -1,6 +1,5 @@
 package com.delivery.domain.user.service;
 
-import com.delivery.common.base.BaseCacheRepository;
 import com.delivery.domain.user.dto.UserDtoMapper;
 import com.delivery.domain.user.dto.request.LoginRequest;
 import com.delivery.domain.user.dto.request.SignUpRequest;
@@ -15,7 +14,6 @@ import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.BlackListRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.cache.UserCacheRepository;
-import com.delivery.global.exception.BusinessException;
 import com.delivery.global.exception.GlobalErrorCode;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.jwt.JwtUtil;
@@ -146,8 +144,7 @@ public class AuthService {
             UUID userUuid = jwtUtil.getUserUuidFromRefreshToken(refreshToken);
             UUID sessionId = jwtUtil.getSessionIdFromRefreshToken(refreshToken);
 
-            String savedRefreshToken =
-                    refreshTokenRepository.findByKey(sessionId);
+            String savedRefreshToken = refreshTokenRepository.findByKey(sessionId);
 
             if (savedRefreshToken == null) {
                 throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
@@ -208,8 +205,7 @@ public class AuthService {
                     jwtUtil.generateAccessToken(userDetails, userDetails.getUserUuid(), sessionId);
 
             String refreshToken =
-                    jwtUtil.generateRefreshToken(
-                            userDetails, userDetails.getUserUuid(), sessionId);
+                    jwtUtil.generateRefreshToken(userDetails, userDetails.getUserUuid(), sessionId);
             refreshTokenRepository.save(sessionId, refreshToken);
 
             return UserDtoMapper.toAuthResponse(userDetails, accessToken, refreshToken);
