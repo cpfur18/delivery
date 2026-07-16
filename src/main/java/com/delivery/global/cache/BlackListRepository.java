@@ -6,9 +6,15 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Repository;
 
-/** 토큰 블랙리스트 */
+import java.util.UUID;
+
+/**
+ * 액세스 토큰 블랙리스트
+ * Key : SessionId
+ * Value : 액세스 토큰
+ */
 @Repository
-public class BlackListRepository implements BaseCacheRepository<String, String> {
+public class BlackListRepository implements BaseCacheRepository<UUID, String> {
     private final Cache cache;
 
     public BlackListRepository(CacheManager cacheManager) {
@@ -16,17 +22,17 @@ public class BlackListRepository implements BaseCacheRepository<String, String> 
     }
 
     @Override
-    public void save(String key, String value) {
+    public void save(UUID key, String value) {
         cache.put(key, value);
     }
 
     @Override
-    public String findByKey(String key) {
+    public String findByKey(UUID key) {
         return cache.get(key, String.class);
     }
 
     @Override
-    public void delete(String key) {
+    public void delete(UUID key) {
         cache.evict(key);
     }
 }

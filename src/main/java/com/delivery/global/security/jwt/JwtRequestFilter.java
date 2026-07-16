@@ -43,21 +43,22 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String accessToken = jwtUtil.resolveAccessToken(request);
         ErrorCode errorCode = null;
-        String username = null;
 
         if (accessToken != null) {
             try {
-                if (blackListRepository.findByKey(accessToken) != null) {
+                UUID sessionId = jwtUtil.getSessionIdFromAccessToken(accessToken);
+
+                // 블랙 리스트 등록 여부 확인
+                if (blackListRepository.findByKey(sessionId) != null) {
                     errorCode = AuthErrorCode.BLACKLISTED_TOKEN;
                     setErrorResponse(response, errorCode);
-                    log.warn(AuthErrorCode.BLACKLISTED_TOKEN.getMessage());
+                    log.info(AuthErrorCode.BLACKLISTED_TOKEN.getMessage());
                     return;
                 }
-                username = jwtUtil.getUserUsernameFromToken(accessToken);
                 UUID userUuid = jwtUtil.getUserUuidFromAccessToken(accessToken);
 
-                if (username != null
-                        && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // 중복 인증 방지
+                if (SecurityContextHolder.getContext().getAuthentication() == null) {
                     CustomUserDetails userDetails = userCacheRepository.findByKey(userUuid);
 
                     try {
@@ -73,6 +74,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         return;
                     }
 
+                    // 토큰 검증
                     if (jwtUtil.validateToken(accessToken, userDetails)) {
                         setAuthentication(request, userDetails);
                     } else {
@@ -82,7 +84,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         return;
                     }
                 }
-
             } catch (IllegalArgumentException e) {
                 errorCode = AuthErrorCode.INVALID_ACCESS_TOKEN;
                 setErrorResponse(response, errorCode);
@@ -100,6 +101,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    // 컨택스트 생성
     private void setAuthentication(HttpServletRequest request, UserDetails userDetails) {
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                 new UsernamePasswordAuthenticationToken(
@@ -111,6 +113,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
     }
 
+    // Response 규격 통일, 따로 분리 가능성 있음
     private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode)
             throws IOException {
         response.setStatus(errorCode.getHttpStatus().value());
