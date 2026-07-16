@@ -11,12 +11,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "관리자 회원 관리", description = "회원 관리 관련 API")
 public interface UserAdminApi {
@@ -41,7 +37,11 @@ public interface UserAdminApi {
     })
     @GetMapping("/{userId}")
     public ResponseEntity<RestApiResponse<PageResponse<UserAdminListResponse>>> getAllUserInfo(
-            @ModelAttribute UserSearchRequest request, @ModelAttribute Pageable pageable);
+            @RequestBody UserSearchRequest request,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String[] sortType,
+            @RequestParam(defaultValue = "DESC") String directionType);
 
     @Operation(summary = "회원 권한 수정", description = "관리자가 회원의 권한을 수정합니다.")
     @ApiResponses({

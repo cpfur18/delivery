@@ -3,7 +3,10 @@ package com.delivery.domain.user.repository;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.entity.User;
 import com.delivery.domain.user.entity.UserStatus;
-import java.time.LocalDateTime;
+import com.delivery.global.exception.BusinessException;
+import com.delivery.global.exception.GlobalErrorCode;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification {
@@ -38,14 +41,24 @@ public class UserSpecification {
      * @param endDate
      * @return
      */
-    public static Specification<User> rangeDate(LocalDateTime startDate, LocalDateTime endDate) {
+    public static Specification<User> rangeDate(LocalDate startDate, LocalDate endDate) {
         return (root, query, criteriaBuilder) -> {
+            if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+                throw new BusinessException(GlobalErrorCode.INVALID_DATE_RANGE);
+            }
             if (startDate != null && endDate != null) {
-                return criteriaBuilder.between(root.get("createdAt"), startDate, endDate);
-            } else if (startDate != null && endDate == null) {
-                return criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), startDate);
-            } else if (startDate == null && endDate != null) {
-                return criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), endDate);
+                return criteriaBuilder.between(
+                        root.get("createdAt"),
+                        startDate.atStartOfDay(),
+                        endDate.atTime(LocalTime.MAX));
+            }
+            if (startDate != null) {
+                return criteriaBuilder.greaterThanOrEqualTo(
+                        root.get("createdAt"), startDate.atStartOfDay());
+            }
+            if (endDate != null) {
+                return criteriaBuilder.lessThanOrEqualTo(
+                        root.get("createdAt"), endDate.atTime(LocalTime.MAX));
             }
             return null;
         };

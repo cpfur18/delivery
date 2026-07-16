@@ -11,9 +11,8 @@ import com.delivery.domain.user.exception.UserErrorCode;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.domain.user.repository.UserSpecification;
-import java.util.Set;
-
 import com.delivery.global.cache.UserCacheRepository;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

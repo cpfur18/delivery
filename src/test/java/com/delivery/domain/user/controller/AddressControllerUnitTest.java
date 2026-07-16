@@ -17,25 +17,16 @@ import com.delivery.domain.user.dto.response.AddressResponse;
 import com.delivery.domain.user.exception.UserErrorCode;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.domain.user.service.AddressService;
-import com.delivery.global.cache.BlackListRepository;
-import com.delivery.global.cache.RefreshTokenRepository;
-import com.delivery.global.cache.UserCacheRepository;
-import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.exception.GlobalErrorCode;
-import com.delivery.global.security.config.CustomUserDetailsService;
-import com.delivery.global.security.jwt.JwtUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AddressController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -92,7 +83,8 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.error").value(GlobalErrorCode.REQUIRED_VALUE.toString()));
+                    .andExpect(
+                            jsonPath("$.error").value(GlobalErrorCode.REQUIRED_VALUE.toString()));
 
             verifyNoInteractions(addressService);
         }

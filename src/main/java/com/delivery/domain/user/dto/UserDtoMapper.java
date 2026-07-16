@@ -37,6 +37,7 @@ public class UserDtoMapper {
                 user.getNickName(),
                 user.getPhoneNumber(),
                 user.getUserStatus(),
+                user.getUserUuid(),
                 user.getRoles(),
                 user.getCreatedAt(),
                 user.getDeletedAt());

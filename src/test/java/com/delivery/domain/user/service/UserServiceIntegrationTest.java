@@ -10,7 +10,6 @@ import com.delivery.domain.user.dto.request.UpdatePhoneNumberRequest;
 import com.delivery.domain.user.dto.response.UserResponse;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.domain.user.entity.User;
-import com.delivery.domain.user.entity.UserStatus;
 import com.delivery.domain.user.fixture.UserFixture;
 import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.UserCacheRepository;
