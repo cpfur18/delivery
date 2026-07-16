@@ -223,6 +223,11 @@ public class AuthService {
         }
     }
 
+    /**
+     * 리프레시 토큰이 일치하는지 확인
+     * @param refreshToken
+     * @param savedToken
+     */
     private void validateRefreshToken(String refreshToken, String savedToken) {
         if (!savedToken.equals(refreshToken)) {
             throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);

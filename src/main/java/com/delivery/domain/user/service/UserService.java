@@ -129,7 +129,7 @@ public class UserService {
     }
 
     /**
-     * 활성화 회원 조회
+     * ACTIVE 회원 조회
      *
      * @param userId 회원 PK키
      * @return 조회한 회원 User 엔티티 객체 반환
