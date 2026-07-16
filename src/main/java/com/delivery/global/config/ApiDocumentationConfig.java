@@ -27,9 +27,11 @@ public class ApiDocumentationConfig {
                                         .description("Local Server")))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .addSecurityItem(new SecurityRequirement().addList("refreshToken"))
-                .components(new Components()
-                        .addSecuritySchemes("bearerAuth", createSecurityScheme("bearer", "JWT"))
-                        .addSecuritySchemes("refreshToken", createRefreshTokenScheme()))
+                .components(
+                        new Components()
+                                .addSecuritySchemes(
+                                        "bearerAuth", createSecurityScheme("bearer", "JWT"))
+                                .addSecuritySchemes("refreshToken", createRefreshTokenScheme()))
                 .externalDocs(
                         new ExternalDocumentation()
                                 .description("Delivery Git Repository")
