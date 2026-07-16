@@ -66,7 +66,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<RestApiResponse<?>> handleHttpMessageNotReadableException(
-            HttpMessageNotReadableException e, // 타입 수정 완료!
+            HttpMessageNotReadableException e,
             HttpServletRequest request) {
         ErrorCode errorCode = GlobalErrorCode.BAD_REQUEST;
 
