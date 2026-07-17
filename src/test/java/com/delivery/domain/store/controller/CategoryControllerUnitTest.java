@@ -18,6 +18,7 @@ import com.delivery.global.cache.WithdrawnUserRepository;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.config.CustomUserDetails;
 import com.delivery.global.security.config.CustomUserDetailsService;
+import com.delivery.global.security.jwt.JwtAuthenticationService;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -57,6 +58,7 @@ class CategoryControllerUnitTest {
     @MockitoBean private BlackListRepository blackListRepository;
     @MockitoBean private UserCacheRepository userCacheRepository;
     @MockitoBean private WithdrawnUserRepository withdrawnUserRepository;
+    @MockitoBean private JwtAuthenticationService jwtAuthenticationService;
 
     @BeforeEach
     void setUpSecurityContext() {
