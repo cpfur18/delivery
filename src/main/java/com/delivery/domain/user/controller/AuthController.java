@@ -24,8 +24,7 @@ import static com.delivery.global.config.JwtProperties.REFRESH_TOKEN_VALIDITY_SE
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
-//public class AuthController implements AuthApi {
-public class AuthController {
+public class AuthController implements AuthApi {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
 
@@ -74,6 +73,9 @@ public class AuthController {
         var cookie = ResponseCookie.from("refreshToken", "")
                 .maxAge(0)
                 .path("/")
+                .secure(false)
+                .sameSite("Strict")
+                .httpOnly(true)
                 .build();
 
         return ResponseEntity.ok()

@@ -26,8 +26,7 @@ public interface AuthApi {
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     public ResponseEntity<RestApiResponse<String>> signUp(
-            @Valid @RequestBody SignUpRequest request,
-            HttpServletResponse response);
+            @Valid @RequestBody SignUpRequest request);
 
     @Operation(summary = "로그인", description = "사용자가 로그인 합니다.")
     @ApiResponses({
@@ -36,8 +35,7 @@ public interface AuthApi {
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     public ResponseEntity<RestApiResponse<String>> login(
-            @Valid @RequestBody LoginRequest request,
-            HttpServletResponse response);
+            @Valid @RequestBody LoginRequest request);
 
     @Operation(summary = "로그아웃", description = "사용자가 로그아웃 합니다.")
     @ApiResponses({
@@ -53,6 +51,5 @@ public interface AuthApi {
         @ApiResponse(responseCode = "401", description = "Access Token이 유효하지 않습니다."),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    public ResponseEntity<RestApiResponse<String>> refreshToken(@CookieValue(value = "refreshToken") Cookie refreshToken,
-                                                                HttpServletResponse response);
+    public ResponseEntity<RestApiResponse<String>> refreshToken(@CookieValue(value = "refreshToken", required = false) String refreshToken);
 }
