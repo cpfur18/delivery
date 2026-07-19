@@ -1,6 +1,7 @@
 package com.delivery.domain.user.service;
 
 import com.delivery.domain.user.dto.UserDtoMapper;
+import com.delivery.domain.user.dto.request.LoginRequest;
 import com.delivery.domain.user.dto.request.SignUpRequest;
 import com.delivery.domain.user.dto.response.AuthResponse;
 import com.delivery.domain.user.entity.Role;
@@ -24,6 +25,11 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +42,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserCacheRepository userCacheRepository;
     private final BlackListRepository blackListRepository;
+    private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
@@ -75,11 +82,23 @@ public class AuthService {
     /**
      * 로그인 사용자 인증 후 액세스 토큰과 리프래시 토큰을 발급
      *
-     * @param customUserDetails
+     * @param request
      * @return
      */
-    public AuthResponse login(CustomUserDetails customUserDetails) {
-        return createAuthResponse(customUserDetails);
+    public AuthResponse login(LoginRequest request) {
+        Authentication authentication;
+
+        try {
+            authentication =
+                    authenticationManager.authenticate(
+                            new UsernamePasswordAuthenticationToken(
+                                    request.username(), request.password()));
+        } catch (InternalAuthenticationServiceException | BadCredentialsException e) {
+            throw new AuthException(AuthErrorCode.INVALID_LOGIN);
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        return createAuthResponse(userDetails);
     }
 
     /**

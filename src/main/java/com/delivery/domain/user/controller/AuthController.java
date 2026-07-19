@@ -1,7 +1,5 @@
 package com.delivery.domain.user.controller;
 
-import static com.delivery.global.config.JwtProperties.REFRESH_TOKEN_VALIDITY_SECONDS;
-
 import com.delivery.common.RestApiResponse;
 import com.delivery.domain.user.controller.swagger.AuthApi;
 import com.delivery.domain.user.dto.request.LoginRequest;
@@ -18,6 +16,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.delivery.global.config.JwtProperties.REFRESH_TOKEN_VALIDITY_SECONDS;
+
 /** 인증 / 인가 컨트롤러 */
 @RestController
 @RequiredArgsConstructor
@@ -31,54 +31,79 @@ public class AuthController implements AuthApi {
             @Valid @RequestBody SignUpRequest request) {
         AuthResponse authResponseToken = authService.signUp(request);
 
-        var cookie =
-                ResponseCookie.from("refreshToken", authResponseToken.refreshToken())
-                        .maxAge(REFRESH_TOKEN_VALIDITY_SECONDS)
-                        .path("/")
-                        .secure(false)
-                        .sameSite("Strict")
-                        .httpOnly(true)
-                        .build();
+        String accessToken = authResponseToken.accessToken();
+        String refreshToken = authResponseToken.refreshToken();
+
+        var cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .maxAge(REFRESH_TOKEN_VALIDITY_SECONDS)
+                .path("/")
+                .secure(false)
+                .sameSite("Strict")
+                .httpOnly(true)
+                .build();
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(
                         RestApiResponse.success(
-                                HttpStatus.CREATED, "회원가입 성공", authResponseToken.accessToken()));
+                                HttpStatus.CREATED, "회원가입 성공", accessToken));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<RestApiResponse<String>> login(@Valid @RequestBody LoginRequest request) {
-        // Security Filter 에서 처리
-        return null;
+    public ResponseEntity<RestApiResponse<String>> login(
+            @Valid @RequestBody LoginRequest request) {
+        AuthResponse authResponseToken = authService.login(request);
+
+        String accessToken = authResponseToken.accessToken();
+        String refreshToken = authResponseToken.refreshToken();
+
+        var cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .maxAge(REFRESH_TOKEN_VALIDITY_SECONDS)
+                .path("/")
+                .secure(false)
+                .sameSite("Strict")
+                .httpOnly(true)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(RestApiResponse.success(HttpStatus.OK, "로그인 성공", accessToken));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<RestApiResponse<Void>> logout(HttpServletRequest request) {
-        // Security Filter 에서 처리
-        return null;
-    }
+        authService.logout(request);
 
-    @PostMapping("/refresh")
-    public ResponseEntity<RestApiResponse<String>> refreshToken(
-            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
-        AuthResponse authResponseToken = authService.refresh(refreshToken);
-
-        var cookie =
-                ResponseCookie.from("refreshToken", authResponseToken.refreshToken())
-                        .maxAge(REFRESH_TOKEN_VALIDITY_SECONDS)
-                        .path("/")
-                        .secure(false)
-                        .sameSite("Strict")
-                        .httpOnly(true)
-                        .build();
+        var cookie = ResponseCookie.from("refreshToken", "")
+                .maxAge(0)
+                .path("/")
+                .secure(false)
+                .sameSite("Strict")
+                .httpOnly(true)
+                .build();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(
-                        RestApiResponse.success(
-                                HttpStatus.OK,
-                                "Refresh Token 재발급 성공",
-                                authResponseToken.accessToken()));
+                .body(RestApiResponse.success(HttpStatus.OK, "로그아웃 성공", null));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RestApiResponse<String>> refreshToken(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
+        AuthResponse authResponseToken = authService.refresh(refreshToken);
+
+        String accessToken = authResponseToken.accessToken();
+        String newRefreshToken = authResponseToken.refreshToken();
+
+        var cookie = ResponseCookie.from("refreshToken", newRefreshToken)
+                .maxAge(REFRESH_TOKEN_VALIDITY_SECONDS)
+                .path("/")
+                .secure(false)
+                .sameSite("Strict")
+                .httpOnly(true)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(RestApiResponse.success(HttpStatus.OK, "Refresh Token 재발급 성공", accessToken));
     }
 }
