@@ -14,7 +14,6 @@ import com.delivery.domain.menu.dto.response.MenuResponse;
 import com.delivery.domain.menu.repository.MenuRepository;
 import com.delivery.domain.store.entity.Store;
 import com.delivery.domain.store.repository.StoreRepository;
-import com.delivery.global.cache.WithdrawnUserRepository;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

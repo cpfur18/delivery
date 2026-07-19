@@ -14,20 +14,19 @@ import com.delivery.global.cache.BlackListRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.cache.UserCacheRepository;
 import com.delivery.global.exception.GlobalErrorCode;
-import com.delivery.global.security.principal.CustomUserDetails;
 import com.delivery.global.security.jwt.JwtUtil;
+import com.delivery.global.security.principal.CustomUserDetails;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Set;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -105,7 +104,7 @@ public class AuthService {
             blackListRepository.save(sessionId, accessToken);
         } catch (ExpiredJwtException e) {
             log.info("이미 만료된 토큰으로 로그아웃 시도");
-            throw  new AuthException(AuthErrorCode.EXPIRED_ACCESS_TOKEN);
+            throw new AuthException(AuthErrorCode.EXPIRED_ACCESS_TOKEN);
         } catch (JwtException e) {
             throw new AuthException(AuthErrorCode.INVALID_ACCESS_TOKEN);
         }

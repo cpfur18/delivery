@@ -13,7 +13,6 @@ import com.delivery.domain.store.exception.StoreException;
 import com.delivery.domain.store.repository.CategoryRepository;
 import com.delivery.domain.store.repository.RegionRepository;
 import com.delivery.domain.user.UserDeletedEvent;
-import com.delivery.global.cache.WithdrawnUserRepository;
 import java.util.Comparator;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

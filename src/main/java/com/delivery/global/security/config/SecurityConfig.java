@@ -32,12 +32,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity,
-                                           CustomAuthenticationFilter authenticationFilter,
-                                           CustomLogoutSuccessHandler logoutSuccessHandler,
-                                           JwtRequestFilter jwtRequestFilter,
-                                           AccessDeniedHandler accessDeniedHandler,
-                                           CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity httpSecurity,
+            CustomAuthenticationFilter authenticationFilter,
+            CustomLogoutSuccessHandler logoutSuccessHandler,
+            JwtRequestFilter jwtRequestFilter,
+            AccessDeniedHandler accessDeniedHandler,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint)
+            throws Exception {
         // csrf 비활성화
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
         httpSecurity.formLogin(AbstractHttpConfigurer::disable);
@@ -49,11 +51,11 @@ public class SecurityConfig {
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // Logout 핸들러 설정
-        httpSecurity.logout(logout -> logout
-                .logoutUrl("/api/v1/auth/logout")
-                .deleteCookies("refreshToken")
-                .logoutSuccessHandler(logoutSuccessHandler)
-        );
+        httpSecurity.logout(
+                logout ->
+                        logout.logoutUrl("/api/v1/auth/logout")
+                                .deleteCookies("refreshToken")
+                                .logoutSuccessHandler(logoutSuccessHandler));
 
         // 필터 관리
         httpSecurity.addFilterAt(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -81,7 +83,8 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         HttpMethod.POST,
                                         "/api/v1/auth",
-//                                        "/api/v1/auth/login",
+                                        //
+                                        // "/api/v1/auth/login",
                                         "/api/v1/auth/refresh")
                                 .permitAll()
 
@@ -124,8 +127,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authenticationConfiguration) throws Exception {
 
         return authenticationConfiguration.getAuthenticationManager();
     }
@@ -149,8 +152,7 @@ public class SecurityConfig {
 
     @Bean
     public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler(
-            ObjectMapper objectMapper,
-            AuthService authService) {
+            ObjectMapper objectMapper, AuthService authService) {
         return new CustomAuthenticationSuccessHandler(objectMapper, authService);
     }
 
@@ -161,7 +163,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CustomLogoutSuccessHandler customLogoutSuccessHandler(ObjectMapper objectMapper, AuthService authService) {
+    public CustomLogoutSuccessHandler customLogoutSuccessHandler(
+            ObjectMapper objectMapper, AuthService authService) {
         return new CustomLogoutSuccessHandler(objectMapper, authService);
     }
 
@@ -171,12 +174,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CustomAuthenticationEntryPoint customAuthenticationEntryPoint(ObjectMapper objectMapper) {
+    public CustomAuthenticationEntryPoint customAuthenticationEntryPoint(
+            ObjectMapper objectMapper) {
         return new CustomAuthenticationEntryPoint(objectMapper);
     }
 
     @Bean
-    public JwtRequestFilter jwtRequestFilter(JwtAuthenticationService jwtAuthenticationService, ObjectMapper objectMapper, JwtUtil jwtUtil) {
+    public JwtRequestFilter jwtRequestFilter(
+            JwtAuthenticationService jwtAuthenticationService,
+            ObjectMapper objectMapper,
+            JwtUtil jwtUtil) {
         return new JwtRequestFilter(jwtAuthenticationService, objectMapper, jwtUtil);
     }
 
