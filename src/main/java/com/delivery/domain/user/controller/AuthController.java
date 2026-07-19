@@ -51,36 +51,12 @@ public class AuthController implements AuthApi {
     @PostMapping("/login")
     public ResponseEntity<RestApiResponse<String>> login(
             @Valid @RequestBody LoginRequest request) {
-        AuthResponse authResponseToken = authService.login(request);
-
-        var cookie = ResponseCookie.from("refreshToken", authResponseToken.refreshToken())
-                .maxAge(REFRESH_TOKEN_VALIDITY_SECONDS)
-                .path("/")
-                .secure(false)
-                .sameSite("Strict")
-                .httpOnly(true)
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(RestApiResponse.success(HttpStatus.OK, "로그인 성공", authResponseToken.accessToken()));
+        throw new UnsupportedOperationException("Security Filter로 처리.");
     }
 
     @PostMapping("/logout")
     public ResponseEntity<RestApiResponse<Void>> logout(HttpServletRequest request) {
-        authService.logout(request);
-
-        var cookie = ResponseCookie.from("refreshToken", "")
-                .maxAge(0)
-                .path("/")
-                .secure(false)
-                .sameSite("Strict")
-                .httpOnly(true)
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(RestApiResponse.success(HttpStatus.OK, "로그아웃 성공", null));
+        throw new UnsupportedOperationException("Security Filter로 처리.");
     }
 
     @PostMapping("/refresh")
