@@ -26,7 +26,6 @@ import org.springframework.context.ApplicationEventPublisher;
 @ExtendWith(MockitoExtension.class)
 class UserServiceUnitTest {
     @Mock private UserRepository userRepository;
-    @Mock private ApplicationEventPublisher applicationEventPublisher;
     @InjectMocks private UserService userService;
 
     @Test

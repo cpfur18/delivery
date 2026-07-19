@@ -30,8 +30,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class UserAdminServiceUnitTest {
     @Mock private UserRepository userRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private AuthenticationManager authenticationManager;
     @Mock private UserCacheRepository userCacheRepository;
     @InjectMocks private UserAdminService userAdminService;
 

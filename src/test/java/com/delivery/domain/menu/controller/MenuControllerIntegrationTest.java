@@ -56,7 +56,6 @@ class MenuControllerIntegrationTest extends AbstractIntegrationTest {
     @Autowired private MenuRepository menuRepository;
     @Autowired private JwtUtil jwtUtil;
     @Autowired private RefreshTokenRepository refreshTokenRepository;
-    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     // Auth 도메인의 실제 회원가입/로그인 HTTP 흐름(이 세션 초반 발견한 간헐적 401 이슈 포함)에
     // 의존하지 않도록, User를 직접 저장하고 JwtUtil로 토큰만 발급 - JwtRequestFilter가 검사하는

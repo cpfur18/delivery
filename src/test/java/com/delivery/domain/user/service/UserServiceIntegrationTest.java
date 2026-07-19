@@ -32,10 +32,6 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private EntityManager entityManager;
-    @Autowired private JwtProperties jwtProperties;
-    @Autowired private UserCacheRepository userCacheRepository;
-    @Autowired private CustomUserDetailsService customUserDetailsService;
-    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     private User savedUser;
     private long userId;

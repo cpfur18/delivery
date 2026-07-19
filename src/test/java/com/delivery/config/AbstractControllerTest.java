@@ -23,19 +23,5 @@ public abstract class AbstractControllerTest {
 
     @Autowired protected ObjectMapper objectMapper;
 
-    @MockitoBean protected UserCacheRepository userCacheRepository;
-
-    @MockitoBean protected RefreshTokenRepository refreshTokenRepository;
-
     @MockitoBean protected JwtUtil jwtUtil;
-
-    @MockitoBean protected JwtProperties jwtProperties;
-
-    @MockitoBean protected CustomUserDetailsService customUserDetailsService;
-
-    @MockitoBean protected BlackListRepository blackListRepository;
-
-    @MockitoBean protected WithdrawnUserRepository withdrawnUserRepository;
-
-    @MockitoBean protected JwtAuthenticationService jwtAuthenticationService;
 }

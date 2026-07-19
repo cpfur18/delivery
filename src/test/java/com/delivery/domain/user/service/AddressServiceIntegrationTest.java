@@ -35,7 +35,6 @@ public class AddressServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired JdbcTemplate jdbcTemplate;
-    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     private User savedUser;
     // 0번 기본 true, 1번 False

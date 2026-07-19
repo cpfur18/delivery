@@ -41,7 +41,6 @@ class MenuServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private StoreRepository storeRepository;
     @Autowired private MenuRepository menuRepository;
     @Autowired private AiLogRepository aiLogRepository;
-    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     @MockitoBean private GeminiClient geminiClient;
 

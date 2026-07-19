@@ -48,15 +48,8 @@ class CategoryControllerUnitTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
 
-    @MockitoBean private RefreshTokenRepository refreshTokenRepository;
-    @MockitoBean private JwtUtil jwtUtil;
     @MockitoBean private CategoryService categoryService;
     @MockitoBean private ErrorCodeRegistry errorCodeRegistry;
-    @MockitoBean private CustomUserDetailsService customUserDetailsService;
-    @MockitoBean private BlackListRepository blackListRepository;
-    @MockitoBean private UserCacheRepository userCacheRepository;
-    @MockitoBean private WithdrawnUserRepository withdrawnUserRepository;
-    @MockitoBean private JwtAuthenticationService jwtAuthenticationService;
 
     @BeforeEach
     void setUpSecurityContext() {

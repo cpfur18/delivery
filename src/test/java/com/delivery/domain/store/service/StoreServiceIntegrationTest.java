@@ -40,7 +40,6 @@ class StoreServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private RegionRepository regionRepository;
     @Autowired private ApplicationEventPublisher applicationEventPublisher;
-    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
 
     private Category savedCategory;
     private Region savedRegion;

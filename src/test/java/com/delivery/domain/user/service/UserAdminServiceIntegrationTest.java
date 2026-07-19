@@ -46,7 +46,6 @@ public class UserAdminServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private CustomUserDetailsService customUserDetailsService;
     @Autowired private UserCacheRepository userCacheRepository;
-    @Autowired private WithdrawnUserRepository withdrawnUserRepository;
     private UserAdminResponse savedUser;
 
     @BeforeEach
