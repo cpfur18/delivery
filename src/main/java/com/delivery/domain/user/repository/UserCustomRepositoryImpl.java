@@ -6,13 +6,12 @@ import com.delivery.domain.user.entity.QUser;
 import com.delivery.domain.user.entity.User;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -32,7 +31,8 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
                                 QuerydslUtils.eq(user.userStatus, request.userStatus()),
                                 QuerydslUtils.startsWith(user.username, request.username()),
                                 QuerydslUtils.contains(user.roles, request.role()),
-                                QuerydslUtils.createdAtBetween(user.createdAt, request.startDate(), request.endDate()))
+                                QuerydslUtils.createdAtBetween(
+                                        user.createdAt, request.startDate(), request.endDate()))
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
                         .orderBy(order)
@@ -50,7 +50,8 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
                                 QuerydslUtils.eq(user.userStatus, request.userStatus()),
                                 QuerydslUtils.startsWith(user.username, request.username()),
                                 QuerydslUtils.contains(user.roles, request.role()),
-                                QuerydslUtils.createdAtBetween(user.createdAt, request.startDate(), request.endDate()))
+                                QuerydslUtils.createdAtBetween(
+                                        user.createdAt, request.startDate(), request.endDate()))
                         .fetchOne();
 
         return new PageImpl<>(result, pageable, total == null ? 0 : total);
