@@ -3,22 +3,20 @@ package com.delivery.common.util;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.*;
-import lombok.experimental.UtilityClass;
-import org.springframework.data.domain.Pageable;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collection;
+import lombok.experimental.UtilityClass;
+import org.springframework.data.domain.Pageable;
 
-/**
- * QueryDSL 유틸리티 클래스
- */
+/** QueryDSL 유틸리티 클래스 */
 @UtilityClass
 public class QuerydslUtils {
 
     /**
      * 단일 값 비교
+     *
      * @param data
      * @param value
      * @return
@@ -30,17 +28,20 @@ public class QuerydslUtils {
 
     /**
      * 여러 값 비교
+     *
      * @param data
      * @param values
      * @return
      * @param <V>
      */
-    public static <V> BooleanExpression in(SimpleExpression<V> data, Collection<? extends V> values) {
+    public static <V> BooleanExpression in(
+            SimpleExpression<V> data, Collection<? extends V> values) {
         return (values == null || values.isEmpty()) ? null : data.in(values);
     }
 
     /**
      * Collection / String 값 비교
+     *
      * @param data
      * @param value
      * @return
@@ -56,12 +57,14 @@ public class QuerydslUtils {
 
     /**
      * 검색 기간
+     *
      * @param data
      * @param startDate
      * @param endDate
      * @return
      */
-    public static BooleanExpression createdAtBetween(DateTimePath<LocalDateTime> data, LocalDate startDate, LocalDate endDate) {
+    public static BooleanExpression createdAtBetween(
+            DateTimePath<LocalDateTime> data, LocalDate startDate, LocalDate endDate) {
         if (startDate != null && endDate != null) {
             return data.between(startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
         }
@@ -78,6 +81,7 @@ public class QuerydslUtils {
 
     /**
      * 정렬조건
+     *
      * @param pageable
      * @param qClass
      * @return
@@ -87,9 +91,12 @@ public class QuerydslUtils {
 
         PathBuilder<T> pathBuilder = new PathBuilder<>(qClass.getType(), qClass.getMetadata());
 
-        return pageable.getSort().stream().map(order -> new OrderSpecifier<>(
-                order.isAscending() ? Order.ASC : Order.DESC,
-                pathBuilder.getString(order.getProperty())
-        )).toArray(OrderSpecifier[]::new);
+        return pageable.getSort().stream()
+                .map(
+                        order ->
+                                new OrderSpecifier<>(
+                                        order.isAscending() ? Order.ASC : Order.DESC,
+                                        pathBuilder.getString(order.getProperty())))
+                .toArray(OrderSpecifier[]::new);
     }
 }
