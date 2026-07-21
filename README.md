@@ -117,8 +117,7 @@ AI 메뉴 생성까지 구현한 **Spring Boot 기반 팀 프로젝트**
 
 # 🏗 배포 인프라 아키텍처
 
-<img width="1289" height="715" alt="스크린샷 2026-07-06 오후 12 08 15" src="https://github.com/user-attachments/assets/468237bf-8ae5-4c0b-bdba-2536b21627aa" />
-
+<img width="1272" height="715" alt="스크린샷 2026-07-21 오후 4 56 30" src="https://github.com/user-attachments/assets/6f5383a1-a93f-4e07-99bd-bb9b959070d3" />
 
 - GitHub Actions가 Push마다 빌드·테스트를 검증하고, `main` 반영 시 SSH로 EC2에 접속해 Docker Compose로 재배포합니다.
 - Security Group으로 `80`(전체) · `22`(팀 IP) · `5432`(내부 전용) 외 포트를 차단합니다.
