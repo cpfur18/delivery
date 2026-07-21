@@ -3,7 +3,6 @@ package com.delivery.global.security.handler;
 import com.delivery.common.RestApiResponse;
 import com.delivery.global.exception.ErrorCode;
 import com.delivery.global.exception.GlobalErrorCode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -13,11 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 @RequiredArgsConstructor
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     @Override
     public void handle(
@@ -42,6 +42,6 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         var errorResponse = RestApiResponse.fail(httpStatus, message, error);
 
-        objectMapper.writeValue(response.getWriter(), errorResponse);
+        jsonMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

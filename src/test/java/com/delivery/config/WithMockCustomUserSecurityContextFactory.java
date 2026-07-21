@@ -19,7 +19,7 @@ public class WithMockCustomUserSecurityContextFactory
         CustomUserDetails customUserDetails =
                 CustomUserDetails.builder()
                         .id(mockCustomUser.id())
-                        .username(mockCustomUser.userName())
+                        .username(mockCustomUser.username())
                         .userUuid(uuid)
                         .authorities(
                                 List.of(

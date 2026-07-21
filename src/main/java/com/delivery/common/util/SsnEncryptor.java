@@ -3,9 +3,9 @@ package com.delivery.common.util;
 import com.delivery.global.exception.BusinessException;
 import com.delivery.global.exception.GlobalErrorCode;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.crypto.encrypt.AesBytesEncryptor;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +28,7 @@ public class SsnEncryptor {
             throw new BusinessException(GlobalErrorCode.BAD_REQUEST);
         }
         byte[] encrypt = aesBytesEncryptor.encrypt(ssn.getBytes(StandardCharsets.UTF_8));
-        return new String(Base64.encode(encrypt), StandardCharsets.UTF_8);
+        return new String(Base64.getEncoder().encode(encrypt), StandardCharsets.UTF_8);
     }
 
     /**
@@ -43,7 +43,7 @@ public class SsnEncryptor {
             throw new BusinessException(GlobalErrorCode.BAD_REQUEST);
         }
         try {
-            byte[] decode = Base64.decode(ssn.getBytes(StandardCharsets.UTF_8));
+            byte[] decode = Base64.getDecoder().decode(ssn.getBytes(StandardCharsets.UTF_8));
             return new String(aesBytesEncryptor.decrypt(decode), StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("[SsnEncryptor] Decrypt failed: {}", e.getMessage(), e);

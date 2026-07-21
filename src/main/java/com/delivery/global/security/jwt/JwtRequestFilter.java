@@ -6,7 +6,6 @@ import com.delivery.domain.user.exception.AuthException;
 import com.delivery.domain.user.exception.UserException;
 import com.delivery.global.exception.ErrorCode;
 import com.delivery.global.security.principal.CustomUserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -22,12 +21,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtAuthenticationService authenticationService;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
     private final JwtUtil jwtUtil;
 
     @Override
@@ -79,7 +79,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 RestApiResponse.fail(
                         errorCode.getHttpStatus(), errorCode.getMessage(), errorCode.getName());
 
-        objectMapper.writeValue(response.getWriter(), errorResponse);
+        jsonMapper.writeValue(response.getWriter(), errorResponse);
     }
 
     private void handleErrorResponse(HttpServletResponse response, ErrorCode errorCode, Exception e)

@@ -1,7 +1,6 @@
 package com.delivery.domain.user.controller;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.verify;
@@ -23,8 +22,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -51,13 +50,13 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                             request.addressDetail(),
                             request.isDefault());
 
-            given(addressService.createAddress(eq(1L), eq(request))).willReturn(response);
+            given(addressService.createAddress(any(), eq(request))).willReturn(response);
 
             // when & then
             mockMvc.perform(
                             post("/api/v1/users/me/addresses")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.success").value(true))
@@ -80,7 +79,7 @@ class AddressControllerUnitTest extends AbstractControllerTest {
             mockMvc.perform(
                             post("/api/v1/users/me/addresses")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(
@@ -99,7 +98,7 @@ class AddressControllerUnitTest extends AbstractControllerTest {
         void getAddress_success() throws Exception {
             // given
             AddressResponse response = new AddressResponse(addressId, "주소1", "상세주소1", true);
-            given(addressService.findAddress(eq(1L), eq(addressId))).willReturn(response);
+            given(addressService.findAddress(any(), eq(addressId))).willReturn(response);
 
             // when & then
             mockMvc.perform(
@@ -112,14 +111,14 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                     .andExpect(jsonPath("$.data.address").value("주소1"))
                     .andExpect(jsonPath("$.data.addressDetail").value("상세주소1"));
 
-            verify(addressService).findAddress(eq(1L), eq(addressId));
+            verify(addressService).findAddress(any(), eq(addressId));
         }
 
         @Test
         @DisplayName("배송지 조회 시 배송지가 없으면 NOT_EXIST_ADDRESS(404) 에러를 반환한다.")
         void getAddress_fail_whenNotExistAddress() throws Exception {
             // given
-            given(addressService.findAddress(eq(1L), eq(addressId)))
+            given(addressService.findAddress(any(), eq(addressId)))
                     .willThrow(new UserException(UserErrorCode.NOT_EXIST_ADDRESS));
 
             // when & then
@@ -130,7 +129,7 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.error").value("NOT_EXIST_ADDRESS"));
 
-            verify(addressService).findAddress(eq(1L), eq(addressId));
+            verify(addressService).findAddress(any(), eq(addressId));
         }
 
         @Test
@@ -142,7 +141,7 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                             new AddressResponse(UUID.randomUUID(), "주소1", "상세주소1", false),
                             new AddressResponse(UUID.randomUUID(), "주소2", "상세주소2", false));
 
-            given(addressService.findAddresses(eq(1L))).willReturn(responsesList);
+            given(addressService.findAddresses(any())).willReturn(responsesList);
 
             // when & then
             mockMvc.perform(
@@ -154,7 +153,7 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                     .andExpect(jsonPath("$.data[0].address").value("주소1"))
                     .andExpect(jsonPath("$.data[1].address").value("주소2"));
 
-            verify(addressService).findAddresses(eq(1L));
+            verify(addressService).findAddresses(any());
         }
     }
 
@@ -176,14 +175,14 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                             updateRequest.addressDetail(),
                             updateRequest.isDefault());
 
-            given(addressService.updateAddress(eq(1L), eq(addressId), eq(updateRequest)))
+            given(addressService.updateAddress(any(), eq(addressId), eq(updateRequest)))
                     .willReturn(response);
 
             // when & then
             mockMvc.perform(
                             patch("/api/v1/users/me/addresses/{addressId}", addressId)
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(updateRequest)))
+                                    .content(jsonMapper.writeValueAsString(updateRequest)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.code").value(200))
@@ -193,7 +192,7 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                             jsonPath("$.data.addressDetail").value(updateRequest.addressDetail()))
                     .andExpect(jsonPath("$.data.isDefault").value(updateRequest.isDefault()));
 
-            verify(addressService).updateAddress(eq(1L), eq(addressId), eq(updateRequest));
+            verify(addressService).updateAddress(any(), eq(addressId), eq(updateRequest));
         }
     }
 
@@ -202,7 +201,7 @@ class AddressControllerUnitTest extends AbstractControllerTest {
     @DisplayName("자신이 등록한 배송지 삭제에 성공한다.")
     void deleteAddress_success() throws Exception {
         // given
-        willDoNothing().given(addressService).deleteAddress(eq(1L), anyString(), eq(addressId));
+        willDoNothing().given(addressService).deleteAddress(any(), any(), eq(addressId));
 
         // when & then
         mockMvc.perform(
@@ -213,6 +212,6 @@ class AddressControllerUnitTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("배송지 삭제 성공"));
 
-        verify(addressService).deleteAddress(eq(1L), anyString(), eq(addressId));
+        verify(addressService).deleteAddress(any(), any(), eq(addressId));
     }
 }

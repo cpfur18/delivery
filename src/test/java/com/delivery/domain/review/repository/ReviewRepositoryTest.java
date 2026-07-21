@@ -2,6 +2,7 @@ package com.delivery.domain.review.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.delivery.config.AbstractIntegrationTest;
 import com.delivery.domain.review.entity.Review;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
-class ReviewRepositoryTest {
+class ReviewRepositoryTest extends AbstractIntegrationTest {
 
     @Autowired private ReviewRepository reviewRepository;
 
