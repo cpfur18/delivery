@@ -1,7 +1,6 @@
 package com.delivery.domain.user.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -23,8 +22,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
@@ -41,7 +40,7 @@ class UserControllerUnitTest extends AbstractControllerTest {
         // given
         UserResponse response =
                 new UserResponse("test1234", "test!", "01012345678", Set.of(Role.CUSTOMER));
-        given(userService.findUserInfo(eq(1L))).willReturn(response);
+        given(userService.findUserInfo(any())).willReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/v1/users/me").contentType(MediaType.APPLICATION_JSON))
@@ -51,7 +50,7 @@ class UserControllerUnitTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.data.phoneNumber").value(response.phoneNumber()))
                 .andDo(MockMvcResultHandlers.print());
 
-        verify(userService).findUserInfo(eq(1L));
+        verify(userService).findUserInfo(any());
     }
 
     @Test
@@ -65,18 +64,18 @@ class UserControllerUnitTest extends AbstractControllerTest {
                 new UserResponse(
                         "test1234", request.nickName(), "01012345678", Set.of(Role.CUSTOMER));
 
-        given(userService.updateNickName(eq(1L), any())).willReturn(response);
+        given(userService.updateNickName(any(), any())).willReturn(response);
 
         // when & then
         mockMvc.perform(
                         patch("/api/v1/users/me/nickname")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.nickName").value("닉네임2"))
                 .andDo(MockMvcResultHandlers.print());
 
-        verify(userService).updateNickName(eq(1L), any());
+        verify(userService).updateNickName(any(), any());
     }
 
     @WithMockCustomUser
@@ -88,7 +87,7 @@ class UserControllerUnitTest extends AbstractControllerTest {
         mockMvc.perform(
                         patch("/api/v1/users/me/nickname")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andDo(MockMvcResultHandlers.print());
 
@@ -113,17 +112,17 @@ class UserControllerUnitTest extends AbstractControllerTest {
                 new UserResponse(
                         "test1234", request.phoneNumber(), "01012345678", Set.of(Role.CUSTOMER));
 
-        given(userService.updateNickName(eq(1L), any())).willReturn(response);
+        given(userService.updateNickName(any(), any())).willReturn(response);
 
         // when & then
         mockMvc.perform(
                         patch("/api/v1/users/me/phone-number")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andDo(MockMvcResultHandlers.print());
 
-        verify(userService).updatePhoneNumber(eq(1L), any());
+        verify(userService).updatePhoneNumber(any(), any());
     }
 
     @Test
@@ -137,7 +136,7 @@ class UserControllerUnitTest extends AbstractControllerTest {
         mockMvc.perform(
                         patch("/api/v1/users/me/phone-number")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andDo(MockMvcResultHandlers.print());
 

@@ -4,7 +4,6 @@ import com.delivery.global.security.handler.*;
 import com.delivery.global.security.jwt.JwtAuthenticationService;
 import com.delivery.global.security.jwt.JwtRequestFilter;
 import com.delivery.global.security.jwt.JwtUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @EnableWebSecurity
@@ -119,22 +119,22 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CustomAccessDeniedHandler customAccessDeniedHandler(ObjectMapper objectMapper) {
-        return new CustomAccessDeniedHandler(objectMapper);
+    public CustomAccessDeniedHandler customAccessDeniedHandler(JsonMapper jsonMapper) {
+        return new CustomAccessDeniedHandler(jsonMapper);
     }
 
     @Bean
     public CustomAuthenticationEntryPoint customAuthenticationEntryPoint(
-            ObjectMapper objectMapper) {
-        return new CustomAuthenticationEntryPoint(objectMapper);
+            JsonMapper jsonMapper) {
+        return new CustomAuthenticationEntryPoint(jsonMapper);
     }
 
     @Bean
     public JwtRequestFilter jwtRequestFilter(
             JwtAuthenticationService jwtAuthenticationService,
-            ObjectMapper objectMapper,
+            JsonMapper jsonMapper,
             JwtUtil jwtUtil) {
-        return new JwtRequestFilter(jwtAuthenticationService, objectMapper, jwtUtil);
+        return new JwtRequestFilter(jwtAuthenticationService, jsonMapper, jwtUtil);
     }
 
     @Bean

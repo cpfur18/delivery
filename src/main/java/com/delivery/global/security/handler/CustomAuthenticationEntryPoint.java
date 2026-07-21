@@ -3,7 +3,6 @@ package com.delivery.global.security.handler;
 import com.delivery.common.RestApiResponse;
 import com.delivery.domain.user.exception.AuthErrorCode;
 import com.delivery.global.exception.ErrorCode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -13,11 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 @RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     @Override
     public void commence(
@@ -42,6 +42,6 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         var errorResponse = RestApiResponse.fail(httpStatus, message, error);
 
-        objectMapper.writeValue(response.getWriter(), errorResponse);
+        jsonMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

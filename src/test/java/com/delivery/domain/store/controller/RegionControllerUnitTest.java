@@ -12,7 +12,6 @@ import com.delivery.domain.store.dto.response.RegionResponse;
 import com.delivery.domain.store.service.RegionService;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.principal.CustomUserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,6 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.json.JsonMapper;
 
 @AutoConfigureMockMvc(addFilters = false)
 @RequiredArgsConstructor
@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class RegionControllerUnitTest {
 
     private final MockMvc mockMvc;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     @MockitoBean private RegionService regionService;
     @MockitoBean private ErrorCodeRegistry errorCodeRegistry;
@@ -78,7 +78,7 @@ class RegionControllerUnitTest {
             mockMvc.perform(
                             post("/api/v1/regions")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.data.name").value("강남구"));
 
@@ -93,7 +93,7 @@ class RegionControllerUnitTest {
             mockMvc.perform(
                             post("/api/v1/regions")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -137,7 +137,7 @@ class RegionControllerUnitTest {
             mockMvc.perform(
                             put("/api/v1/regions/{regionId}", regionId)
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.name").value("서초구"));
 

@@ -15,18 +15,18 @@ import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.delivery.global.security.principal.CustomUserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import java.util.UUID;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
 @Transactional
 @SpringBootTest
@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthControllerIntegrationTest extends AbstractIntegrationTest {
     @Autowired private MockMvc mockMvc;
 
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired private JsonMapper jsonMapper;
 
     @Autowired private UserRepository userRepository;
 
@@ -83,7 +83,7 @@ public class AuthControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(
                         post("/api/v1/auth")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isNotEmpty())
@@ -107,7 +107,7 @@ public class AuthControllerIntegrationTest extends AbstractIntegrationTest {
                         post("/api/v1/auth/login")
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
+                                .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isNotEmpty())

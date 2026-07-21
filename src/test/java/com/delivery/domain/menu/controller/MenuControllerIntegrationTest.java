@@ -19,16 +19,16 @@ import com.delivery.domain.user.repository.UserRepository;
 import com.delivery.global.cache.RefreshTokenRepository;
 import com.delivery.global.security.jwt.JwtUtil;
 import com.delivery.global.security.principal.CustomUserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.json.JsonMapper;
 
 // MenuControllerTest(@WebMvcTest, addFilters=false)는 필터/메서드 시큐리티가 아예 안 실려서
 // "403 테스트"가 사실 목 서비스가 예외를 던진 걸 확인하는 것뿐이었다 - 실제 @PreAuthorize와
@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class MenuControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired private JsonMapper jsonMapper;
     @Autowired private UserRepository userRepository;
     @Autowired private StoreRepository storeRepository;
     @Autowired private MenuRepository menuRepository;
@@ -87,7 +87,7 @@ class MenuControllerIntegrationTest extends AbstractIntegrationTest {
                             post("/api/v1/stores/{storeId}/menus", storeId)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(
-                                            objectMapper.writeValueAsString(
+                                            jsonMapper.writeValueAsString(
                                                     MenuFixture.CREATE.createRequestDto())))
                     .andExpect(status().isUnauthorized());
         }
@@ -103,7 +103,7 @@ class MenuControllerIntegrationTest extends AbstractIntegrationTest {
                                     .header("Authorization", "Bearer " + token)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(
-                                            objectMapper.writeValueAsString(
+                                            jsonMapper.writeValueAsString(
                                                     MenuFixture.CREATE.createRequestDto())))
                     .andExpect(status().isForbidden());
         }
@@ -126,7 +126,7 @@ class MenuControllerIntegrationTest extends AbstractIntegrationTest {
                                     .header("Authorization", "Bearer " + otherOwnerToken)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(
-                                            objectMapper.writeValueAsString(
+                                            jsonMapper.writeValueAsString(
                                                     MenuFixture.CREATE.createRequestDto())))
                     .andExpect(status().isForbidden())
                     .andExpect(
@@ -145,7 +145,7 @@ class MenuControllerIntegrationTest extends AbstractIntegrationTest {
                                     .header("Authorization", "Bearer " + managerToken)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(
-                                            objectMapper.writeValueAsString(
+                                            jsonMapper.writeValueAsString(
                                                     MenuFixture.UPDATE.createRequestDto())))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.data.name").value(MenuFixture.UPDATE.menuName()));

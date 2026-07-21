@@ -3,9 +3,10 @@ package com.delivery.config;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** 추상 테스트 컨테이너 클래스 상속해서 사용 */
-// @Testcontainers
+@Testcontainers
 public abstract class AbstractIntegrationTest {
 
     static PostgreSQLContainer<?> postgres =
