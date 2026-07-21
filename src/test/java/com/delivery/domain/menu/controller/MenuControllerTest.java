@@ -25,15 +25,14 @@ import com.delivery.domain.menu.service.MenuService;
 import com.delivery.domain.user.entity.Role;
 import com.delivery.global.exception.ErrorCodeRegistry;
 import com.delivery.global.security.principal.CustomUserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,6 +40,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.json.JsonMapper;
 
 // GlobalExceptionHandler가 ErrorCodeRegistry를 생성자 주입받는데 @WebMvcTest 슬라이스엔
 // 자동으로 안 실려서 명시적으로 가져옴 - 실제 Menu 검증 실패는 MenuExceptionHandler가
@@ -54,7 +54,7 @@ class MenuControllerTest {
 
     @Autowired private MockMvc mockMvc;
 
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired private JsonMapper jsonMapper;
 
     @MockitoBean private MenuService menuService;
 
@@ -106,7 +106,7 @@ class MenuControllerTest {
                 mockMvc.perform(
                                 post("/api/v1/stores/{storeId}/menus", STORE_ID)
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(request)))
+                                        .content(jsonMapper.writeValueAsString(request)))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.code").value(201))
@@ -132,7 +132,7 @@ class MenuControllerTest {
             mockMvc.perform(
                             post("/api/v1/stores/{storeId}/menus", STORE_ID)
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(
@@ -153,7 +153,7 @@ class MenuControllerTest {
             mockMvc.perform(
                             post("/api/v1/stores/{storeId}/menus", STORE_ID)
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(
@@ -182,7 +182,7 @@ class MenuControllerTest {
                 mockMvc.perform(
                                 post("/api/v1/stores/{storeId}/menus", STORE_ID)
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(request)))
+                                        .content(jsonMapper.writeValueAsString(request)))
                         .andExpect(status().isForbidden())
                         .andExpect(
                                 jsonPath("$.error")
@@ -330,7 +330,7 @@ class MenuControllerTest {
                 mockMvc.perform(
                                 patch("/api/v1/menus/{menuId}", menuId)
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(request)))
+                                        .content(jsonMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.name").value(MenuFixture.UPDATE.menuName()))
                         .andExpect(jsonPath("$.data.price").value(MenuFixture.UPDATE.price()));
@@ -350,7 +350,7 @@ class MenuControllerTest {
             mockMvc.perform(
                             patch("/api/v1/menus/{menuId}", menuId)
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(
                             jsonPath("$.error").value(MenuErrorCode.INVALID_MENU_NAME.getName()));
@@ -367,7 +367,7 @@ class MenuControllerTest {
             mockMvc.perform(
                             patch("/api/v1/menus/{menuId}", menuId)
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(
                             jsonPath("$.error").value(MenuErrorCode.INVALID_MENU_PRICE.getName()));
@@ -394,7 +394,7 @@ class MenuControllerTest {
                 mockMvc.perform(
                                 patch("/api/v1/menus/{menuId}/visibility", menuId)
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(request)))
+                                        .content(jsonMapper.writeValueAsString(request)))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.hidden").value(true));
             } finally {

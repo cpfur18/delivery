@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -52,7 +52,7 @@ class AuthControllerUnitTest extends AbstractControllerTest {
             mockMvc.perform(
                             post("/api/v1/auth")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(cookie().value("refreshToken", "refreshToken"))
@@ -71,7 +71,7 @@ class AuthControllerUnitTest extends AbstractControllerTest {
             mockMvc.perform(
                             post("/api/v1/auth")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
 
             verifyNoInteractions(authService);
@@ -115,7 +115,7 @@ class AuthControllerUnitTest extends AbstractControllerTest {
             mockMvc.perform(
                             post("/api/v1/auth/login")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(cookie().value("refreshToken", "refreshToken"))
@@ -138,13 +138,13 @@ class AuthControllerUnitTest extends AbstractControllerTest {
             mockMvc.perform(
                             post("/api/v1/auth/login")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request)))
+                                    .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value("아이디를 입력해주세요."));
             mockMvc.perform(
                             post("/api/v1/auth/login")
                                     .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request2)))
+                                    .content(jsonMapper.writeValueAsString(request2)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value("비밀번호를 입력해주세요."));
 

@@ -10,7 +10,7 @@ import org.springframework.security.test.context.support.WithSecurityContext;
 public @interface WithMockCustomUser {
     long id() default 1L;
 
-    String userName() default "testUser123";
+    String username() default "testUser123";
 
     String userUuid() default "8a38c201-9f79-450f-a38f-51ef19c0de2c";
 
